@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-Command *)",
+      "Bash(ls \"\\\\\\\\192.168.10.222\\\\web\\\\tontine-encheres\\\\lang\")",
+      "Bash(ls *)",
+      "Bash(tail -50 \"\\\\\\\\192.168.10.222\\\\web\\\\tontine-encheres\\\\storage\\\\logs\\\\laravel.log\")",
+      "Bash(grep -A 5 \"\\\\\"message\\\\\":\" \"\\\\\\\\192.168.10.222\\\\web\\\\tontine-encheres\\\\storage\\\\logs\\\\laravel.log\")",
+      "Bash(powershell *)",
+      "Bash(Sort-Object Name)",
+      "Bash(Select-Object -Last 5)",
+      "Bash(Get-ChildItem -Path \"\\\\\\\\192.168.10.222\\\\web\\\\tontine-encheres\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(find \"\\\\\\\\192.168.10.222\\\\web\\\\tontine-encheres\\\\app\" -type f -name \"*.php\")",
+      "Bash(cd \"\\\\\\\\192.168.10.222\\\\web\\\\tontine-encheres\")",
+      "Bash(php artisan *)",
+      "Bash(dir /s \"\\\\\\\\192.168.10.222\\\\web\\\\tontine-encheres\" /B)"
+    ]
+  }
+}
