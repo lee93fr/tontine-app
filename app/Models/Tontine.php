@@ -98,7 +98,23 @@ class Tontine extends Model
             $preliminaryPerRound = ($totalSlots * (float) $this->preliminary_amount) / $standardRoundsCount;
         }
 
-        return $preliminaryPerRound + max(0, $totalSlots - 1) * (float) $this->cotisation_amount;
+        if ($this->has_bidding) {
+            $avgBidPct = (float) ($this->rounds()
+                ->where('type', 'standard')
+                ->whereNotNull('winner_id')
+                ->where('winning_bid', '>', 0)
+                ->avg('winning_bid') ?? 0.0);
+
+            $pastWonSlots  = $participants->sum(fn($p) => min($p->pivot->wins_count, $p->pivot->slots));
+            $eligibleSlots = $participants->sum(fn($p) => max(0, $p->pivot->slots - $p->pivot->wins_count));
+
+            $basePot = $pastWonSlots * (float) $this->cotisation_amount
+                + max(0, $eligibleSlots - 1) * (float) $this->cotisation_amount * (1 - $avgBidPct / 100);
+        } else {
+            $basePot = max(0, $totalSlots - 1) * (float) $this->cotisation_amount;
+        }
+
+        return $preliminaryPerRound + $basePot;
     }
 
     public function paymentBlock(): string
@@ -142,12 +158,36 @@ class Tontine extends Model
             $preliminaryPerRound = $preliminaryTotal / $standardRoundsCount;
         }
 
-        $this->rounds()->where('type', 'standard')->update([
-            'pot_amount' => round($preliminaryPerRound + max(0, $totalSlots - 1) * (float) $this->cotisation_amount, 2),
+        if ($this->has_bidding) {
+            // Enchère moyenne des tours déjà tirés (hors tirages au sort à 0%)
+            $avgBidPct = (float) ($this->rounds()
+                ->where('type', 'standard')
+                ->whereNotNull('winner_id')
+                ->where('winning_bid', '>', 0)
+                ->avg('winning_bid') ?? 0.0);
+
+            // Slots déjà remportés par des gagnants passés (paient 100% sur les tours suivants)
+            $pastWonSlots  = $participants->sum(fn($p) => min($p->pivot->wins_count, $p->pivot->slots));
+            // Slots encore éligibles (pas encore gagnés)
+            $eligibleSlots = $participants->sum(fn($p) => max(0, $p->pivot->slots - $p->pivot->wins_count));
+
+            // Gagnants passés → 100% ; non-gagnants éligibles → (1 − enchère%) ; gagnant du tour → 0 (d'où −1)
+            $basePot = round(
+                $pastWonSlots * (float) $this->cotisation_amount
+                + max(0, $eligibleSlots - 1) * (float) $this->cotisation_amount * (1 - $avgBidPct / 100),
+                2
+            );
+        } else {
+            $basePot = round(max(0, $totalSlots - 1) * (float) $this->cotisation_amount, 2);
+        }
+
+        // Ne met à jour que les tours sans gagnant afin de préserver les montants exacts des tours tirés
+        $this->rounds()->where('type', 'standard')->whereNull('winner_id')->update([
+            'pot_amount' => round($preliminaryPerRound + $basePot, 2),
         ]);
 
         if ($this->has_preliminary && $this->preliminary_amount) {
-            $this->rounds()->where('type', 'preliminary')->update([
+            $this->rounds()->where('type', 'preliminary')->whereNull('winner_id')->update([
                 'pot_amount' => round($totalSlots * (float) $this->preliminary_amount, 2),
             ]);
         }
