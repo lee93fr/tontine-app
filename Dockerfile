@@ -73,7 +73,11 @@ RUN composer dump-autoload --optimize --no-dev --no-interaction \
     && chown -R www-data:www-data storage bootstrap/cache
 
 # Configuration nginx / php / supervisor / entrypoint
-COPY docker/nginx.conf       /etc/nginx/sites-available/default
+# On remplace la conf nginx PRINCIPALE (un seul server block, aucun include
+# de sites-enabled/conf.d) et on supprime le site par défaut de Debian afin
+# d'éliminer tout risque de "duplicate location".
+RUN rm -f /etc/nginx/sites-enabled/default /etc/nginx/conf.d/default.conf
+COPY docker/nginx.conf       /etc/nginx/nginx.conf
 COPY docker/opcache.ini      /usr/local/etc/php/conf.d/opcache.ini
 COPY docker/php.ini          /usr/local/etc/php/conf.d/zz-app.ini
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
