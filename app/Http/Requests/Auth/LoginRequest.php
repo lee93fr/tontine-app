@@ -40,25 +40,28 @@ class LoginRequest extends FormRequest
         $ok = false;
 
         if (str_contains($identifier, '@')) {
-            // Tentative par email
-            $ok = Auth::attempt(['email' => $identifier, 'password' => $this->input('password')], $remember);
+            // Tentative par email — on exige aussi que le compte soit actif
+            $ok = Auth::attempt(
+                ['email' => $identifier, 'password' => $this->input('password'), 'active' => true],
+                $remember
+            );
         } else {
             // Tentative par téléphone — on normalise les chiffres et on tente les deux variantes FR
             $user = $this->resolveUserByPhone($identifier);
-            if ($user && Hash::check($this->input('password'), $user->password)) {
+            if ($user && $user->active && Hash::check($this->input('password'), $user->password)) {
                 Auth::login($user, $remember);
                 $ok = true;
             }
         }
 
         if (! $ok) {
-            RateLimiter::hit($this->throttleKey());
+            $this->hitRateLimit();
             throw ValidationException::withMessages([
                 'identifier' => trans('auth.failed'),
             ]);
         }
 
-        RateLimiter::clear($this->throttleKey());
+        $this->clearRateLimit();
     }
 
     private function resolveUserByPhone(string $input): ?User
@@ -76,17 +79,35 @@ class LoginRequest extends FormRequest
             $variants[] = '33' . substr($digits, 1);
         }
 
-        return User::query()->where(function ($q) use ($variants) {
-            foreach ($variants as $v) {
-                $q->orWhereRaw("regexp_replace(coalesce(phone, ''), '\\D', '', 'g') = ?", [$v]);
-                $q->orWhereRaw("regexp_replace(coalesce(phone_number, ''), '\\D', '', 'g') = ?", [$v]);
-            }
-        })->first();
+        try {
+            return User::query()->where(function ($q) use ($variants) {
+                foreach ($variants as $v) {
+                    // On compare les chiffres seuls extraits côté PHP avec les colonnes phone/phone_number.
+                    // preg_replace côté PHP génère $variants ; on cherche une correspondance exacte sur
+                    // les valeurs brutes ou après suppression des séparateurs courants (espaces, tirets…).
+                    $q->orWhereRaw("regexp_replace(coalesce(phone, ''), '[^0-9]', '', 'g') = ?", [$v])
+                      ->orWhereRaw("regexp_replace(coalesce(phone_number, ''), '[^0-9]', '', 'g') = ?", [$v]);
+                }
+            })->first();
+        } catch (\Throwable) {
+            // Repli si regexp_replace ou une colonne n'est pas disponible sur cette version DB
+            return User::query()->where(function ($q) use ($variants) {
+                foreach ($variants as $v) {
+                    $q->orWhere('phone', $v)
+                      ->orWhere('phone_number', $v);
+                }
+            })->first();
+        }
     }
 
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        try {
+            if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+                return;
+            }
+        } catch (\Throwable) {
+            // Si le cache est indisponible on laisse passer (fail open)
             return;
         }
 
@@ -100,6 +121,24 @@ class LoginRequest extends FormRequest
                 'minutes' => ceil($seconds / 60),
             ]),
         ]);
+    }
+
+    private function hitRateLimit(): void
+    {
+        try {
+            RateLimiter::hit($this->throttleKey());
+        } catch (\Throwable) {
+            // Cache indisponible — on ne bloque pas la réponse d'erreur de credentials
+        }
+    }
+
+    private function clearRateLimit(): void
+    {
+        try {
+            RateLimiter::clear($this->throttleKey());
+        } catch (\Throwable) {
+            // Cache indisponible — l'authentification a réussi, on continue
+        }
     }
 
     public function throttleKey(): string
