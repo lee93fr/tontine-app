@@ -10,7 +10,7 @@ class Payment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'round_id', 'user_id', 'amount', 'paid_amount', 'due_date', 'status',
+        'round_id', 'user_id', 'amount', 'paid_amount', 'due_date', 'waive_penalty', 'status',
         'paid_at', 'reference', 'notes',
         'last_reminder_sent_at', 'reminder_count', 'last_sms_reminder_sent_at',
     ];
@@ -19,6 +19,7 @@ class Payment extends Model
         'amount' => 'decimal:2',
         'paid_amount' => 'decimal:2',
         'due_date' => 'date',
+        'waive_penalty' => 'boolean',
         'paid_at' => 'datetime',
         'last_reminder_sent_at' => 'datetime',
         'last_sms_reminder_sent_at' => 'datetime',
@@ -74,6 +75,9 @@ class Payment extends Model
 
     public function penaltyAmount(float $perDay, ?float $cap): float
     {
+        if ($this->waive_penalty) {
+            return 0.0;
+        }
         $penalty = $this->daysLate() * $perDay;
         if ($cap !== null) {
             $penalty = min($penalty, $cap);

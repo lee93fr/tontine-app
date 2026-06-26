@@ -263,7 +263,9 @@
                         @if($payment->status === 'paid' && $payment->paid_at)
                             <span>{{ __('app.round.paid_on') }}: <strong>{{ $payment->paid_at->format('d/m/Y') }}</strong></span>
                         @endif
-                        @if($daysLate > 0)
+                        @if($payment->waive_penalty)
+                            <span class="text-gray-400 italic">pénalité dispensée</span>
+                        @elseif($daysLate > 0)
                             <span class="text-red-600 font-medium">
                                 {{ __('app.round.days_late') }}: {{ $daysLate }}j
                                 @if($penalty > 0)
@@ -293,6 +295,18 @@
                         <input type="text" name="reference" placeholder="{{ __('app.common.reference') }}" value="{{ $payment->reference }}"
                                {{ $paymentsLocked ? 'disabled' : '' }}
                                class="text-xs border border-gray-300 rounded px-2 py-1 flex-1 min-w-[120px]">
+                        <input type="date" name="due_date"
+                               value="{{ $payment->due_date?->format('Y-m-d') }}"
+                               title="Date de règlement" {{ $paymentsLocked ? 'disabled' : '' }}
+                               class="text-xs border border-gray-300 rounded px-2 py-1">
+                        <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer" title="Dispenser de pénalité pour ce paiement">
+                            <input type="hidden" name="waive_penalty" value="0">
+                            <input type="checkbox" name="waive_penalty" value="1"
+                                   {{ $payment->waive_penalty ? 'checked' : '' }}
+                                   {{ $paymentsLocked ? 'disabled' : '' }}
+                                   class="rounded text-indigo-600">
+                            Pas de pénalité
+                        </label>
                         <button {{ $paymentsLocked ? 'disabled' : '' }}
                                 class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded">✓</button>
                     </form>

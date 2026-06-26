@@ -318,10 +318,12 @@ class RoundController extends Controller
         }
 
         $data = $request->validate([
-            'paid_amount' => 'nullable|numeric|min:0',
-            'status'      => 'nullable|in:pending,paid,partial,late',
-            'reference'   => 'nullable|string|max:255',
-            'notes'       => 'nullable|string',
+            'paid_amount'   => 'nullable|numeric|min:0',
+            'status'        => 'nullable|in:pending,paid,partial,late',
+            'reference'     => 'nullable|string|max:255',
+            'notes'         => 'nullable|string',
+            'due_date'      => 'nullable|date',
+            'waive_penalty' => 'nullable|boolean',
         ]);
 
         if (array_key_exists('paid_amount', $data)) {
@@ -344,8 +346,10 @@ class RoundController extends Controller
             }
         }
 
-        if (array_key_exists('reference', $data)) $payment->reference = $data['reference'];
-        if (array_key_exists('notes', $data))     $payment->notes = $data['notes'];
+        if (array_key_exists('reference', $data))     $payment->reference     = $data['reference'];
+        if (array_key_exists('notes', $data))         $payment->notes         = $data['notes'];
+        if (array_key_exists('due_date', $data))      $payment->due_date      = $data['due_date'];
+        $payment->waive_penalty = (bool) ($data['waive_penalty'] ?? false);
 
         $payment->save();
 
