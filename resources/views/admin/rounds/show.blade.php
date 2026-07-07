@@ -187,17 +187,26 @@
                 @error('amount')<p class="text-xs text-red-600 font-medium mb-2">⚠️ {{ $message }}</p>@enderror
                 @forelse($eligibleParticipants as $p)
                 @php $existingBid = $round->bids->firstWhere('user_id', $p->id); @endphp
-                <form method="POST" action="{{ route('admin.rounds.bid', [$tontine, $round, $p]) }}"
-                      class="flex items-center gap-2 mb-1.5 last:mb-0">
-                    @csrf
-                    <span class="text-xs text-gray-700 flex-1 truncate">{{ $p->full_name }}</span>
-                    <input type="number" name="amount" min="0" max="{{ $tontine->bid_cap }}" step="1"
-                           value="{{ $existingBid?->amount }}" placeholder="%" required
-                           class="text-xs border border-gray-300 rounded px-2 py-1 w-16 text-right">
-                    <button class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded font-medium">
-                        {{ $existingBid ? 'Modifier' : 'Enchérir' }}
-                    </button>
-                </form>
+                <div class="flex items-center gap-2 mb-1.5 last:mb-0">
+                    <form method="POST" action="{{ route('admin.rounds.bid', [$tontine, $round, $p]) }}"
+                          class="flex items-center gap-2 flex-1">
+                        @csrf
+                        <span class="text-xs text-gray-700 flex-1 truncate">{{ $p->full_name }}</span>
+                        <input type="number" name="amount" min="0" max="{{ $tontine->bid_cap }}" step="1"
+                               value="{{ $existingBid?->amount }}" placeholder="%" required
+                               class="text-xs border border-gray-300 rounded px-2 py-1 w-16 text-right">
+                        <button class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded font-medium">
+                            {{ $existingBid ? 'Modifier' : 'Enchérir' }}
+                        </button>
+                    </form>
+                    @if($existingBid)
+                    <form method="POST" action="{{ route('admin.rounds.bid.cancel', [$tontine, $round, $p]) }}"
+                          onsubmit="return confirm('Annuler l\'enchère de {{ addslashes($p->full_name) }} ?')">
+                        @csrf @method('DELETE')
+                        <button class="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded" title="Annuler l'enchère">🗑️</button>
+                    </form>
+                    @endif
+                </div>
                 @empty
                 <p class="text-xs text-gray-400">Aucun participant éligible.</p>
                 @endforelse

@@ -100,6 +100,21 @@ class TresorierController extends Controller
         return back()->with('success', "Enchère de {$data['amount']}% enregistrée pour {$user->full_name}.");
     }
 
+    /** Permet à un trésorier d'annuler l'enchère d'un participant sur un tour encore ouvert. */
+    public function cancelBidFor(Round $round, User $user, BidService $bidService)
+    {
+        $tontine = $this->tontine();
+        abort_unless($round->tontine_id === $tontine->id, 403);
+
+        $result = $bidService->cancelBid($round, $user->primaryUser());
+
+        if (!$result['success']) {
+            return back()->with('error', $result['message']);
+        }
+
+        return back()->with('success', "Enchère de {$user->full_name} annulée.");
+    }
+
     public function updatePayment(Request $request, Round $round, Payment $payment)
     {
         $tontine = $this->tontine();

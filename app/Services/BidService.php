@@ -67,4 +67,26 @@ class BidService
 
         return ['success' => true, 'bid' => $bid];
     }
+
+    /**
+     * Annule l'enchère d'un participant pour un tour donné (admin/trésorier uniquement,
+     * tant que le tour est encore ouvert).
+     *
+     * @return array{success: bool, message?: string}
+     */
+    public function cancelBid(Round $round, User $primaryUser): array
+    {
+        if (!$round->isOpen()) {
+            return ['success' => false, 'message' => 'Les enchères sont fermées pour ce tour, impossible d\'annuler.'];
+        }
+
+        $bid = Bid::where('round_id', $round->id)->where('user_id', $primaryUser->id)->first();
+        if (!$bid) {
+            return ['success' => false, 'message' => "Ce participant n'a pas d'enchère sur ce tour."];
+        }
+
+        $bid->delete();
+
+        return ['success' => true];
+    }
 }

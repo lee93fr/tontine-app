@@ -109,6 +109,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('/tontines/{tontine}/rounds/{round}/draw', [RoundController::class, 'draw'])->name('rounds.draw');
     Route::delete('/tontines/{tontine}/rounds/{round}/draw', [RoundController::class, 'cancelDraw'])->name('rounds.cancel-draw');
     Route::post('/tontines/{tontine}/rounds/{round}/participants/{user}/enchere', [RoundController::class, 'placeBidFor'])->name('rounds.bid');
+    Route::delete('/tontines/{tontine}/rounds/{round}/participants/{user}/enchere', [RoundController::class, 'cancelBidFor'])->name('rounds.bid.cancel');
     Route::patch('/tontines/{tontine}/rounds/{round}/payments/{payment}', [RoundController::class, 'updatePayment'])->name('rounds.payments.update');
     Route::post('/tontines/{tontine}/rounds/{round}/payments/{payment}/relancer', [RoundController::class, 'remindPayment'])->name('rounds.payments.remind');
     Route::post('/tontines/{tontine}/rounds/{round}/payments/{payment}/relancer-sms', [RoundController::class, 'remindPaymentSms'])->name('rounds.payments.remind.sms');
@@ -175,6 +176,7 @@ Route::prefix('tresorier')->name('tresorier.')->middleware(['auth', 'role:tresor
     Route::patch('/tontine/tours/{round}/ouvrir', [TresorierController::class, 'openRound'])->name('rounds.open');
     Route::patch('/tontine/tours/{round}/fermer', [TresorierController::class, 'closeRound'])->name('rounds.close');
     Route::post('/tontine/tours/{round}/participants/{user}/enchere', [TresorierController::class, 'placeBidFor'])->name('rounds.bid');
+    Route::delete('/tontine/tours/{round}/participants/{user}/enchere', [TresorierController::class, 'cancelBidFor'])->name('rounds.bid.cancel');
     Route::patch('/tontine/tours/{round}/paiements/{payment}', [TresorierController::class, 'updatePayment'])->name('rounds.payments.update');
     Route::get('/paiements', [TresorierController::class, 'paiements'])->name('paiements');
     Route::post('/paiements/{payment}/relancer', [TresorierController::class, 'remindPayment'])->name('paiements.remind');

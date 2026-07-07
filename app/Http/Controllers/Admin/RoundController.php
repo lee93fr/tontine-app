@@ -149,6 +149,20 @@ class RoundController extends Controller
         return back()->with('success', "Enchère de {$data['amount']}% enregistrée pour {$user->full_name}.");
     }
 
+    /** Permet à un admin d'annuler l'enchère d'un participant sur un tour encore ouvert. */
+    public function cancelBidFor(Tontine $tontine, Round $round, User $user, BidService $bidService)
+    {
+        abort_unless($round->tontine_id === $tontine->id, 404);
+
+        $result = $bidService->cancelBid($round, $user->primaryUser());
+
+        if (!$result['success']) {
+            return back()->with('error', $result['message']);
+        }
+
+        return back()->with('success', "Enchère de {$user->full_name} annulée.");
+    }
+
     public function openRound(Tontine $tontine, Round $round)
     {
         if ($round->status !== 'pending') {
