@@ -140,6 +140,7 @@
         @if($round->isOpen())
         <div class="px-6 py-4 bg-indigo-50/60 border-t border-indigo-100">
             <p class="text-xs font-semibold text-indigo-700 mb-2">🛡️ Enchérir pour un participant</p>
+            @error('amount')<p class="text-xs text-red-600 font-medium mb-2">⚠️ {{ $message }}</p>@enderror
             @forelse($eligibleParticipants as $p)
             @php $existingBid = $round->bids->firstWhere('user_id', $p->id); @endphp
             <form method="POST" action="{{ route('tresorier.rounds.bid', [$round, $p]) }}"
