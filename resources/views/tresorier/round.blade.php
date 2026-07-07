@@ -107,6 +107,60 @@
     </div>
     @endif
 
+    @if(!$round->isPreliminary())
+    {{-- Enchères reçues --}}
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h2 class="font-semibold text-gray-800">{{ __('app.round.bids_received') }}</h2>
+        </div>
+        @forelse($round->bids->sortByDesc('amount') as $i => $bid)
+        <div class="px-6 py-3 flex items-center justify-between border-b border-gray-50 last:border-0
+            {{ $bid->user_id === $round->winner_id ? 'bg-yellow-50' : '' }}">
+            <div class="flex items-center gap-3">
+                <span class="text-sm text-gray-400 w-5">{{ $i+1 }}.</span>
+                <div>
+                    <div class="text-sm font-medium text-gray-900">{{ $bid->user->full_name }}</div>
+                    <div class="text-xs text-gray-400">{{ $bid->bid_at->format('d/m H:i') }}</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-lg font-bold {{ $bid->amount >= $tontine->bid_cap ? 'text-red-600' : 'text-gray-900' }}">
+                    {{ $bid->amount }}%
+                </span>
+                @if($bid->user_id === $round->winner_id)<span class="text-yellow-500">🏆</span>@endif
+                @if($bid->amount >= $tontine->bid_cap)
+                    <span class="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded">{{ __('app.round.cap_label') }}</span>
+                @endif
+            </div>
+        </div>
+        @empty
+        <div class="px-6 py-8 text-center text-gray-400 text-sm">{{ __('app.round.no_bids') }}</div>
+        @endforelse
+
+        @if($round->isOpen())
+        <div class="px-6 py-4 bg-indigo-50/60 border-t border-indigo-100">
+            <p class="text-xs font-semibold text-indigo-700 mb-2">🛡️ Enchérir pour un participant</p>
+            @forelse($eligibleParticipants as $p)
+            @php $existingBid = $round->bids->firstWhere('user_id', $p->id); @endphp
+            <form method="POST" action="{{ route('tresorier.rounds.bid', [$round, $p]) }}"
+                  class="flex items-center gap-2 mb-1.5 last:mb-0">
+                @csrf
+                <span class="text-xs text-gray-700 flex-1 truncate">{{ $p->full_name }}</span>
+                <input type="number" name="amount" min="0" max="{{ $tontine->bid_cap }}" step="1"
+                       value="{{ $existingBid?->amount }}" placeholder="%" required
+                       class="text-xs border border-gray-300 rounded px-2 py-1 w-16 text-right">
+                <button class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded font-medium">
+                    {{ $existingBid ? 'Modifier' : 'Enchérir' }}
+                </button>
+            </form>
+            @empty
+            <p class="text-xs text-gray-400">Aucun participant éligible.</p>
+            @endforelse
+        </div>
+        @endif
+    </div>
+    @endif
+
     {{-- Paiements à gérer --}}
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">

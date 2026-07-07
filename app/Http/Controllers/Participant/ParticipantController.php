@@ -7,8 +7,8 @@ use App\Models\Bid;
 use App\Models\Round;
 use App\Models\Tontine;
 use App\Models\User;
-use App\Notifications\BidPlacedNotification;
 use App\Notifications\ParticipantMessageNotification;
+use App\Services\BidService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -124,70 +124,38 @@ class ParticipantController extends Controller
         ));
     }
 
-    public function placeBid(Request $request, Round $round)
+    public function placeBid(Request $request, Round $round, BidService $bidService)
     {
         $user        = auth()->user();
         $primaryUser = $user->primaryUser();
 
         // Enchère pour un délégué ?
         $bidAsUserId = $request->input('bid_as_user_id');
+        $placedBy    = null;
         if ($bidAsUserId) {
             $delegatee = User::findOrFail($bidAsUserId);
             abort_unless((int) $delegatee->delegate_id === $primaryUser->id, 403);
+            $placedBy    = $primaryUser;
             $primaryUser = $delegatee->primaryUser();
-        }
-
-        $pivotParticipant = $round->tontine->participants()->where('user_id', $primaryUser->id)->first();
-        abort_unless($pivotParticipant !== null, 403);
-
-        if (!$round->tontine->has_bidding) {
-            return back()->with('error', 'Cette tontine fonctionne par tirage au sort, les enchères ne sont pas activées.');
-        }
-
-        if ($round->tontine->bid_requires_signature) {
-            $isSecondary  = $primaryUser->partner_id !== null;
-            $sigStatus    = $isSecondary
-                ? ($pivotParticipant->pivot->partner_signature_status ?? null)
-                : ($pivotParticipant->pivot->signature_status ?? null);
-            if ($sigStatus !== 'signed') {
-                return back()->with('error', 'Vous devez signer le règlement de la tontine avant de pouvoir placer une enchère.');
-            }
-        }
-
-        if ($pivotParticipant->pivot->wins_count >= $pivotParticipant->pivot->slots) {
-            return back()->with('error', 'Vous avez déjà remporté tous vos tours dans cette tontine.');
-        }
-
-        if (!$round->isOpen()) {
-            return back()->with('error', 'Les enchères sont fermées pour ce tour.');
         }
 
         $cap  = (int) $round->tontine->bid_cap;
         $data = $request->validate(['amount' => "required|integer|min:0|max:{$cap}"]);
-        $amount = (int) $data['amount'];
 
-        if ($amount < $cap) {
-            $currentHighest = (int) $round->bids()->max('amount');
-            if ($amount <= $currentHighest) {
-                return back()->withErrors(['amount' => __('app.bid.too_low')])->withInput();
+        $result = $bidService->placeBid($round, $primaryUser, (int) $data['amount'], $placedBy);
+
+        if (!$result['success']) {
+            if ($result['type'] === 'abort') {
+                abort(403);
             }
+            if ($result['type'] === 'validation') {
+                return back()->withErrors(['amount' => $result['message']])->withInput();
+            }
+            return back()->with('error', $result['message']);
         }
 
-        $bid = Bid::updateOrCreate(
-            ['round_id' => $round->id, 'user_id' => $primaryUser->id],
-            ['amount' => $amount, 'bid_at' => now()]
-        );
-
-        $tontine = $round->tontine;
-        $tontine->participants()
-            ->where('user_id', '!=', $primaryUser->id)
-            ->with('partnerOf')
-            ->get()
-            ->flatMap(fn($p) => $p->partnerOf ? collect([$p, $p->partnerOf]) : collect([$p]))
-            ->each(fn($recipient) => $recipient->notify(new BidPlacedNotification($round, $bid)));
-
         $suffix = $bidAsUserId ? ' (pour ' . User::find($bidAsUserId)->full_name . ')' : '';
-        return back()->with('success', __('app.bid.success', ['amount' => $amount]) . $suffix);
+        return back()->with('success', __('app.bid.success', ['amount' => $data['amount']]) . $suffix);
     }
 
     public function editProfile()

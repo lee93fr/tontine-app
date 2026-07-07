@@ -180,6 +180,28 @@
             @empty
             <div class="px-6 py-8 text-center text-gray-400 text-sm">{{ __('app.round.no_bids') }}</div>
             @endforelse
+
+            @if($round->isOpen())
+            <div class="px-6 py-4 bg-indigo-50/60 border-t border-indigo-100">
+                <p class="text-xs font-semibold text-indigo-700 mb-2">🛡️ Enchérir pour un participant</p>
+                @forelse($eligibleParticipants as $p)
+                @php $existingBid = $round->bids->firstWhere('user_id', $p->id); @endphp
+                <form method="POST" action="{{ route('admin.rounds.bid', [$tontine, $round, $p]) }}"
+                      class="flex items-center gap-2 mb-1.5 last:mb-0">
+                    @csrf
+                    <span class="text-xs text-gray-700 flex-1 truncate">{{ $p->full_name }}</span>
+                    <input type="number" name="amount" min="0" max="{{ $tontine->bid_cap }}" step="1"
+                           value="{{ $existingBid?->amount }}" placeholder="%" required
+                           class="text-xs border border-gray-300 rounded px-2 py-1 w-16 text-right">
+                    <button class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded font-medium">
+                        {{ $existingBid ? 'Modifier' : 'Enchérir' }}
+                    </button>
+                </form>
+                @empty
+                <p class="text-xs text-gray-400">Aucun participant éligible.</p>
+                @endforelse
+            </div>
+            @endif
         </div>
         @endif
 

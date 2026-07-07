@@ -9,7 +9,7 @@ class Bid extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['round_id', 'user_id', 'amount', 'bid_at'];
+    protected $fillable = ['round_id', 'user_id', 'placed_by_id', 'amount', 'bid_at'];
 
     protected $casts = [
         'amount' => 'decimal:2',
@@ -24,5 +24,11 @@ class Bid extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** Utilisateur ayant réellement placé l'enchère, si différent du bénéficiaire (délégué, trésorier, admin). */
+    public function placedBy()
+    {
+        return $this->belongsTo(User::class, 'placed_by_id');
     }
 }

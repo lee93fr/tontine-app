@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Round;
 use App\Models\Tontine;
 use App\Models\Payment;
+use App\Models\User;
 use App\Notifications\PaymentReminderNotification;
 use App\Notifications\RoundOpenedNotification;
 use App\Notifications\RoundResultNotification;
+use App\Services\BidService;
 use App\Services\SmsNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
@@ -122,7 +124,29 @@ class RoundController extends Controller
     {
         $round->load(['bids.user', 'winner', 'payments.user', 'tontine']);
         $hasOtherOpenRound = $tontine->rounds()->where('status', 'open')->where('id', '!=', $round->id)->exists();
-        return view('admin.rounds.show', compact('tontine', 'round', 'hasOtherOpenRound'));
+        $eligibleParticipants = $tontine->participants()->get()
+            ->filter(fn($p) => $p->pivot->wins_count < $p->pivot->slots);
+        return view('admin.rounds.show', compact('tontine', 'round', 'hasOtherOpenRound', 'eligibleParticipants'));
+    }
+
+    /** Permet à un admin de placer/modifier une enchère pour le compte d'un participant. */
+    public function placeBidFor(Request $request, Tontine $tontine, Round $round, User $user, BidService $bidService)
+    {
+        abort_unless($round->tontine_id === $tontine->id, 404);
+
+        $cap  = (int) $tontine->bid_cap;
+        $data = $request->validate(['amount' => "required|integer|min:0|max:{$cap}"]);
+
+        $result = $bidService->placeBid($round, $user->primaryUser(), (int) $data['amount'], auth()->user());
+
+        if (!$result['success']) {
+            if ($result['type'] === 'abort') {
+                abort(404, $result['message']);
+            }
+            return back()->withErrors(['amount' => $result['message']])->withInput();
+        }
+
+        return back()->with('success', "Enchère de {$data['amount']}% enregistrée pour {$user->full_name}.");
     }
 
     public function openRound(Tontine $tontine, Round $round)

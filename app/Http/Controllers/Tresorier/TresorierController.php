@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\Round;
 use App\Models\Tontine;
+use App\Models\User;
 use App\Notifications\PaymentReminderNotification;
+use App\Services\BidService;
 use App\Services\SmsNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -71,8 +73,31 @@ class TresorierController extends Controller
             ->where('status', 'open')
             ->where('id', '!=', $round->id)
             ->exists();
+        $eligibleParticipants = $tontine->participants()->get()
+            ->filter(fn($p) => $p->pivot->wins_count < $p->pivot->slots);
 
-        return view('tresorier.round', compact('tontine', 'round', 'hasOtherOpenRound'));
+        return view('tresorier.round', compact('tontine', 'round', 'hasOtherOpenRound', 'eligibleParticipants'));
+    }
+
+    /** Permet à un trésorier de placer/modifier une enchère pour le compte d'un participant. */
+    public function placeBidFor(Request $request, Round $round, User $user, BidService $bidService)
+    {
+        $tontine = $this->tontine();
+        abort_unless($round->tontine_id === $tontine->id, 403);
+
+        $cap  = (int) $tontine->bid_cap;
+        $data = $request->validate(['amount' => "required|integer|min:0|max:{$cap}"]);
+
+        $result = $bidService->placeBid($round, $user->primaryUser(), (int) $data['amount'], auth()->user());
+
+        if (!$result['success']) {
+            if ($result['type'] === 'abort') {
+                abort(403, $result['message']);
+            }
+            return back()->withErrors(['amount' => $result['message']])->withInput();
+        }
+
+        return back()->with('success', "Enchère de {$data['amount']}% enregistrée pour {$user->full_name}.");
     }
 
     public function updatePayment(Request $request, Round $round, Payment $payment)
