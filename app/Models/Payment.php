@@ -94,4 +94,24 @@ class Payment extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * Solde créditeur d'un participant pour une tontine : somme de ses
+     * trop-perçus (paid_amount - amount) sur tous les tours autres que
+     * $excludeRoundId. Toujours ≥ 0. À déduire du montant dû du tour suivant.
+     */
+    public static function creditBalanceFor(int $tontineId, int $userId, ?int $excludeRoundId = null): float
+    {
+        $query = self::query()
+            ->where('user_id', $userId)
+            ->whereHas('round', fn ($q) => $q->where('tontine_id', $tontineId));
+
+        if ($excludeRoundId) {
+            $query->where('round_id', '!=', $excludeRoundId);
+        }
+
+        $surplus = $query->get()->sum(fn ($p) => (float) $p->paid_amount - (float) $p->amount);
+
+        return max(0.0, $surplus);
+    }
 }

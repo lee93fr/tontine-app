@@ -61,10 +61,13 @@ class RoundController extends Controller
             ]);
 
             foreach ($participants as $participant) {
+                $baseAmount = $data['preliminary_amount'] * $participant->pivot->slots;
+                $credit     = Payment::creditBalanceFor($tontine->id, $participant->id, $round->id);
+
                 Payment::create([
                     'round_id' => $round->id,
                     'user_id'  => $participant->id,
-                    'amount'   => $data['preliminary_amount'] * $participant->pivot->slots,
+                    'amount'   => max(0, round($baseAmount - $credit, 2)),
                     'due_date' => $round->payment_due_at,
                     'status'   => 'pending',
                 ]);
@@ -99,10 +102,13 @@ class RoundController extends Controller
 
         // Chaque participant paie slots × cotisation (le préliminaire est déjà réglé séparément)
         foreach ($participants as $participant) {
+            $baseAmount = $tontine->cotisation_amount * $participant->pivot->slots;
+            $credit     = Payment::creditBalanceFor($tontine->id, $participant->id, $round->id);
+
             Payment::create([
                 'round_id' => $round->id,
                 'user_id'  => $participant->id,
-                'amount'   => $tontine->cotisation_amount * $participant->pivot->slots,
+                'amount'   => max(0, round($baseAmount - $credit, 2)),
                 'due_date' => $round->payment_due_at,
                 'status'   => 'pending',
             ]);
@@ -278,6 +284,11 @@ class RoundController extends Controller
                     2
                 );
             }
+
+            // Défalque le trop-perçu des tours précédents (ex : enchère à -5%,
+            // participant verse le montant plein au lieu du montant réduit).
+            $credit = Payment::creditBalanceFor($tontine->id, $participant->id, $round->id);
+            $newAmount = max(0, round($newAmount - $credit, 2));
 
             $updateData = ['amount' => $newAmount];
             if ($newAmount <= 0) {

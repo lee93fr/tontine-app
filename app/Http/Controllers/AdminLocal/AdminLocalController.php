@@ -590,6 +590,10 @@ class AdminLocalController extends Controller
                 );
             }
 
+            // Défalque le trop-perçu des tours précédents.
+            $credit = Payment::creditBalanceFor($tontine->id, $participant->id, $round->id);
+            $newAmount = max(0, round($newAmount - $credit, 2));
+
             $payment->update(['amount' => $newAmount]);
             $nonWinnerTotal += $newAmount;
         }
