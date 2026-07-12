@@ -11,6 +11,7 @@ use App\Notifications\PaymentReminderNotification;
 use App\Notifications\RoundOpenedNotification;
 use App\Notifications\RoundResultNotification;
 use App\Services\BidService;
+use App\Services\RoundRecapPdfService;
 use App\Services\SmsNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
@@ -127,6 +128,13 @@ class RoundController extends Controller
         $eligibleParticipants = $tontine->participants()->get()
             ->filter(fn($p) => $p->pivot->wins_count < $p->pivot->slots);
         return view('admin.rounds.show', compact('tontine', 'round', 'hasOtherOpenRound', 'eligibleParticipants'));
+    }
+
+    public function downloadRecap(Tontine $tontine, Round $round, RoundRecapPdfService $recapPdf)
+    {
+        abort_unless($round->tontine_id === $tontine->id, 404);
+
+        return $recapPdf->download($round);
     }
 
     /** Permet à un admin de placer/modifier une enchère pour le compte d'un participant. */

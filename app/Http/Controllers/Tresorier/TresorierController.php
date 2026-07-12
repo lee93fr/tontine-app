@@ -9,6 +9,7 @@ use App\Models\Tontine;
 use App\Models\User;
 use App\Notifications\PaymentReminderNotification;
 use App\Services\BidService;
+use App\Services\RoundRecapPdfService;
 use App\Services\SmsNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -77,6 +78,14 @@ class TresorierController extends Controller
             ->filter(fn($p) => $p->pivot->wins_count < $p->pivot->slots);
 
         return view('tresorier.round', compact('tontine', 'round', 'hasOtherOpenRound', 'eligibleParticipants'));
+    }
+
+    public function downloadRecap(Round $round, RoundRecapPdfService $recapPdf)
+    {
+        $tontine = $this->tontine();
+        abort_unless($round->tontine_id === $tontine->id, 403);
+
+        return $recapPdf->download($round);
     }
 
     /** Permet à un trésorier de placer/modifier une enchère pour le compte d'un participant. */

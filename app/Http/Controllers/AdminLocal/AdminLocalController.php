@@ -13,6 +13,7 @@ use App\Notifications\RoundOpenedNotification;
 use App\Notifications\RoundResultNotification;
 use Carbon\Carbon;
 use App\Services\ParticipantSignatureService;
+use App\Services\RoundRecapPdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -427,6 +428,14 @@ class AdminLocalController extends Controller
         $hasOtherOpenRound = $tontine->rounds()->where('status', 'open')->where('id', '!=', $round->id)->exists();
 
         return view('admin_local.rounds.show', compact('tontine', 'round', 'canEdit', 'hasOtherOpenRound'));
+    }
+
+    public function downloadRecap(Tontine $tontine, Round $round, RoundRecapPdfService $recapPdf)
+    {
+        $this->assertAccess($tontine);
+        abort_unless($round->tontine_id === $tontine->id, 404);
+
+        return $recapPdf->download($round);
     }
 
     public function openRound(Tontine $tontine, Round $round)

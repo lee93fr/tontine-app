@@ -308,6 +308,7 @@ return [
         'create_btn'         => 'Créer le tour',
         'draw_btn'           => '🎲 Désigner le gagnant',
         'draw_confirm'       => 'Lancer le tirage et désigner le gagnant ?',
+        'recap_pdf_btn'      => '📄 Recap PDF',
         'pot'                => 'Cagnotte',
         'bids_count'         => 'Enchères',
         'payments_paid'      => 'payés',
