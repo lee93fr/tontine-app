@@ -24,7 +24,7 @@
         </div>
 
         <div class="flex gap-2 flex-wrap">
-            <a href="{{ route('tresorier.rounds.recap', $round) }}"
+            <a href="{{ route('tresorier.rounds.recap', $round) }}" target="_blank" rel="noopener"
                class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium text-sm">
                 {{ __('app.round.recap_pdf_btn') }}
             </a>
