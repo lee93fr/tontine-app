@@ -19,11 +19,20 @@ class RoundRecapPdfService
         $round->loadMissing(['winner', 'payments.user', 'tontine']);
         $tontine = $round->tontine;
 
+        $participants = $tontine->participants()->get()->keyBy('id');
+
         $dueAmounts = $round->payments
-            ->map(fn ($payment) => [
-                'name' => $payment->user->full_name,
-                'amount' => (float) $payment->amount,
-            ])
+            ->map(function ($payment) use ($participants) {
+                $slots = (int) ($participants->get($payment->user_id)?->pivot->slots ?? 1);
+                $winsCount = (int) ($participants->get($payment->user_id)?->pivot->wins_count ?? 0);
+
+                return [
+                    'name' => $payment->user->full_name,
+                    'amount' => (float) $payment->amount,
+                    'slots' => $slots,
+                    'remaining_slots' => max(0, $slots - $winsCount),
+                ];
+            })
             ->sortBy('name')
             ->values();
 

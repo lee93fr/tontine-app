@@ -32,6 +32,7 @@
     }
     table.due-table th { background-color: #f3f4f6; text-transform: uppercase; font-size: 9px; color: #6b7280; }
     table.due-table td.amount, table.due-table th.amount { text-align: right; }
+    table.due-table td.center, table.due-table th.center { text-align: center; }
     table.due-table tr.is-winner td { background-color: #fefce8; }
 
     .payment-info { border: 1px solid #e5e7eb; border-radius: 4px; padding: 10px 14px; }
@@ -74,6 +75,8 @@
         <thead>
             <tr>
                 <th>Participant</th>
+                <th class="center">Nombre de tours</th>
+                <th class="center">Tours restants</th>
                 <th class="amount">Montant dû</th>
             </tr>
         </thead>
@@ -81,10 +84,12 @@
             @forelse($dueAmounts as $due)
             <tr class="{{ $round->winner && $due['name'] === $round->winner->full_name ? 'is-winner' : '' }}">
                 <td>{{ $due['name'] }}</td>
+                <td class="center">{{ $due['slots'] }}</td>
+                <td class="center">{{ $due['remaining_slots'] }}</td>
                 <td class="amount">{{ number_format($due['amount'], 2, ',', ' ') }} €</td>
             </tr>
             @empty
-            <tr><td colspan="2">Aucun paiement enregistré pour ce tour.</td></tr>
+            <tr><td colspan="4">Aucun paiement enregistré pour ce tour.</td></tr>
             @endforelse
         </tbody>
     </table>
