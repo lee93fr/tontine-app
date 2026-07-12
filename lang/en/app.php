@@ -232,6 +232,7 @@ return [
         'create_btn'         => 'Create round',
         'draw_btn'           => '🎲 Designate winner',
         'draw_confirm'       => 'Launch the draw and designate the winner?',
+        'recap_pdf_btn'      => '📄 PDF recap',
         'pot'                => 'Pot',
         'bids_count'         => 'Bids',
         'payments_paid'      => 'paid',

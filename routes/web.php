@@ -102,6 +102,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::get('/tontines/{tontine}/rounds/create', [RoundController::class, 'create'])->name('rounds.create');
     Route::post('/tontines/{tontine}/rounds', [RoundController::class, 'store'])->name('rounds.store');
     Route::get('/tontines/{tontine}/rounds/{round}', [RoundController::class, 'show'])->name('rounds.show');
+    Route::get('/tontines/{tontine}/rounds/{round}/recap.pdf', [RoundController::class, 'downloadRecap'])->name('rounds.recap');
     Route::patch('/tontines/{tontine}/rounds/{round}/dates', [RoundController::class, 'updateDates'])->name('rounds.dates.update');
     Route::patch('/tontines/{tontine}/rounds/{round}/open', [RoundController::class, 'openRound'])->name('rounds.open');
     Route::patch('/tontines/{tontine}/rounds/{round}/close', [RoundController::class, 'closeRound'])->name('rounds.close');
@@ -173,6 +174,7 @@ Route::prefix('tresorier')->name('tresorier.')->middleware(['auth', 'role:tresor
     Route::get('/dashboard', [TresorierController::class, 'dashboard'])->name('dashboard');
     Route::get('/tontine', [TresorierController::class, 'showTontine'])->name('tontine');
     Route::get('/tontine/tours/{round}', [TresorierController::class, 'showRound'])->name('rounds.show');
+    Route::get('/tontine/tours/{round}/recap.pdf', [TresorierController::class, 'downloadRecap'])->name('rounds.recap');
     Route::patch('/tontine/tours/{round}/ouvrir', [TresorierController::class, 'openRound'])->name('rounds.open');
     Route::patch('/tontine/tours/{round}/fermer', [TresorierController::class, 'closeRound'])->name('rounds.close');
     Route::post('/tontine/tours/{round}/participants/{user}/enchere', [TresorierController::class, 'placeBidFor'])->name('rounds.bid');
@@ -264,6 +266,7 @@ Route::prefix('espace-admin')->name('admin-local.')->middleware(['auth', 'role:a
 
     // Tours
     Route::get('/tontines/{tontine}/rounds/{round}', [AdminLocalController::class, 'showRound'])->name('rounds.show');
+    Route::get('/tontines/{tontine}/rounds/{round}/recap.pdf', [AdminLocalController::class, 'downloadRecap'])->name('rounds.recap');
     Route::patch('/tontines/{tontine}/rounds/{round}/open', [AdminLocalController::class, 'openRound'])->name('rounds.open');
     Route::patch('/tontines/{tontine}/rounds/{round}/close', [AdminLocalController::class, 'closeRound'])->name('rounds.close');
     Route::patch('/tontines/{tontine}/rounds/{round}/reopen', [AdminLocalController::class, 'reopenRound'])->name('rounds.reopen');

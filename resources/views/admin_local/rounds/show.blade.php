@@ -26,8 +26,13 @@
             </div>
         </div>
 
-        @if($canEdit)
         <div class="flex gap-2 flex-wrap">
+            <a href="{{ route('admin-local.rounds.recap', [$tontine, $round]) }}"
+               class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium text-sm">
+                {{ __('app.round.recap_pdf_btn') }}
+            </a>
+
+            @if($canEdit)
             @if($round->status === 'pending' && !$hasOtherOpenRound)
             <form method="POST" action="{{ route('admin-local.rounds.open', [$tontine, $round]) }}">
                 @csrf @method('PATCH')
@@ -76,8 +81,8 @@
                 </button>
             </form>
             @endif
+            @endif
         </div>
-        @endif
     </div>
 
     {{-- Stats --}}
