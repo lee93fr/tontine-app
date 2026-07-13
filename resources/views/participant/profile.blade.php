@@ -170,10 +170,10 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('participant.profile.delegate') }}" class="flex gap-2">
+            <form method="POST" action="{{ route('participant.profile.delegate') }}" class="flex flex-col sm:flex-row gap-2">
                 @csrf @method('PATCH')
                 <select name="delegate_id"
-                        class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        class="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <option value="">— Aucune délégation —</option>
                     @foreach($availableDelegates as $d)
                         <option value="{{ $d->id }}" {{ $primaryUser->delegate_id == $d->id ? 'selected' : '' }}>

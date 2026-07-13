@@ -64,7 +64,7 @@
                 </span>
                 <a href="{{ route('admin.tontines.show', $tontine) }}"
                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium">
-                    {{ __('app.tontine.manage') }} →
+                    {{ __('app.tontine.manage') }}
                 </a>
                 @if($tontine->status !== 'archived')
                 <form method="POST" action="{{ route('admin.tontines.archive', $tontine) }}"

@@ -72,7 +72,10 @@ class Round extends Model
     /**
      * Determine the winner with tontine rules:
      * - Highest bid wins (capped at bid_cap)
-     * - If tie at cap or no bids → random draw
+     * - If tie at cap → random draw among the tied top bidders
+     * - If nobody bids above 0% → random draw among participants who registered
+     *   at 0% (a 0% bid is a voluntary opt-in to the draw, not a competitive offer)
+     * - If literally nobody has bid at all → random draw among all eligible participants
      */
     public function resolveWinner(): ?User
     {

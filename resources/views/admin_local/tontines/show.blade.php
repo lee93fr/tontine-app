@@ -296,7 +296,7 @@
                     <div class="text-sm font-medium text-gray-900">
                         Clôture : {{ $round->bid_closes_at->format('d/m/Y H:i') }}
                     </div>
-                    <div class="text-xs text-gray-500 truncate">
+                    <div class="text-xs text-gray-500">
                         @if($round->isPreliminary())
                             {{ number_format($round->preliminary_amount, 2) }} € / personne — Total : {{ number_format($round->pot_amount, 2) }} €
                         @else

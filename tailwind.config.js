@@ -9,6 +9,15 @@ export default {
         './resources/views/**/*.blade.php',
     ],
 
+    // Les badges de statut construisent leurs classes de couleur dynamiquement
+    // (ex: "bg-{{ $sc }}-100 text-{{ $sc }}-700") : le scanner de contenu ne
+    // voit pas ces noms de classe résolus, il faut donc les lister ici.
+    safelist: [
+        {
+            pattern: /(bg|text|border)-(gray|red|yellow|green|blue|indigo|amber)-(50|100|200|700)/,
+        },
+    ],
+
     theme: {
         extend: {
             fontFamily: {
