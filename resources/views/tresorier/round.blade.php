@@ -225,7 +225,7 @@
 
         @foreach($round->payments as $payment)
         @php
-            $sc = ['pending'=>'yellow','paid'=>'green','late'=>'red'][$payment->status];
+            $sc = ['pending'=>'yellow','paid'=>'green','late'=>'red','partial'=>'blue'][$payment->status] ?? 'gray';
             $daysLate = $payment->daysLate();
             $penalty  = $payment->penaltyAmount(
                 (float) $tontine->penalty_per_day,

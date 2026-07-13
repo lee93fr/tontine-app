@@ -142,18 +142,18 @@
         <nav class="-mb-px flex gap-1 overflow-x-auto">
             <button type="button" @click="tab = 'tours'"
                     :class="tab === 'tours' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="whitespace-nowrap inline-flex items-center gap-2 py-3 px-4 border-b-2 text-sm font-medium transition">
+                    class="whitespace-nowrap inline-flex items-center gap-1 sm:gap-2 py-3 px-2.5 sm:px-4 border-b-2 text-sm font-medium transition">
                 🎲 Tours <span class="text-xs bg-gray-100 px-1.5 py-0.5 rounded-full">{{ $tontine->rounds->count() }}</span>
                 @if($hasOpenRound)<span class="w-2 h-2 rounded-full bg-green-500" title="Tour en cours"></span>@endif
             </button>
             <button type="button" @click="tab = 'membres'"
                     :class="tab === 'membres' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="whitespace-nowrap inline-flex items-center gap-2 py-3 px-4 border-b-2 text-sm font-medium transition">
+                    class="whitespace-nowrap inline-flex items-center gap-1 sm:gap-2 py-3 px-2.5 sm:px-4 border-b-2 text-sm font-medium transition">
                 👥 Membres <span class="text-xs bg-gray-100 px-1.5 py-0.5 rounded-full">{{ $totalCount }}</span>
             </button>
             <button type="button" @click="tab = 'parametres'"
                     :class="tab === 'parametres' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="whitespace-nowrap inline-flex items-center gap-2 py-3 px-4 border-b-2 text-sm font-medium transition">
+                    class="whitespace-nowrap inline-flex items-center gap-1 sm:gap-2 py-3 px-2.5 sm:px-4 border-b-2 text-sm font-medium transition">
                 ⚙️ Paramètres
             </button>
         </nav>
@@ -749,7 +749,7 @@
                                         ✏️ Modifier
                                     </button>
                                 </div>
-                                <div class="text-xs text-gray-500 truncate">
+                                <div class="text-xs text-gray-500">
                                     @if($round->isPreliminary())
                                         {{ __('app.round.deposit_per_person') }} : {{ number_format($round->preliminary_amount, 2) }} €
                                         — {{ __('app.round.total_collected') }} : {{ number_format($round->pot_amount, 2) }} €
@@ -1069,9 +1069,9 @@
                         $roleLabels = ['superadmin'=>'Super-admin','admin'=>'Admin','admin_local'=>'Admin local','tresorier'=>'Trésorier','participant'=>'Participant'];
                     @endphp
                     @if($candidats->isNotEmpty())
-                        <form method="POST" action="{{ route('admin.tontines.tresorier.assign', $tontine) }}" class="flex gap-2">
+                        <form method="POST" action="{{ route('admin.tontines.tresorier.assign', $tontine) }}" class="flex flex-col sm:flex-row gap-2">
                             @csrf
-                            <select name="user_id" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                            <select name="user_id" class="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-2 text-sm">
                                 @foreach($candidats as $u)
                                     <option value="{{ $u->id }}">{{ $u->full_name }} ({{ $roleLabels[$u->role] ?? $u->role }}) — {{ $u->email }}</option>
                                 @endforeach

@@ -183,14 +183,14 @@
     </div>
 
     {{-- Recherche --}}
-    <form method="GET" action="{{ route('users.index') }}" class="flex gap-2">
+    <form method="GET" action="{{ route('users.index') }}" class="flex flex-col sm:flex-row gap-2">
         <input type="hidden" name="role" value="{{ $role }}">
         <input type="text" name="q" value="{{ $search }}" placeholder="Rechercher par nom, prénom ou email…"
-               class="flex-1 rounded-lg border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500">
-        <button class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm">Rechercher</button>
+               class="flex-1 min-w-0 rounded-lg border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500">
+        <button class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm whitespace-nowrap">Rechercher</button>
         @if($search)
             <a href="{{ route('users.index', ['role' => $role]) }}"
-               class="border border-gray-300 text-gray-600 hover:bg-gray-50 px-3 py-2 rounded-lg text-sm">Réinitialiser</a>
+               class="border border-gray-300 text-gray-600 hover:bg-gray-50 px-3 py-2 rounded-lg text-sm whitespace-nowrap text-center">Réinitialiser</a>
         @endif
     </form>
 

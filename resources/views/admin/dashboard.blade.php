@@ -21,7 +21,7 @@
             $totalCount    = $allTontines->count();
         @endphp
         <details class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden" {{ $hasFilter ? 'open' : '' }}>
-            <summary class="px-6 py-4 cursor-pointer flex items-center justify-between gap-3 hover:bg-gray-50 transition">
+            <summary class="px-6 py-4 cursor-pointer flex flex-wrap items-center justify-between gap-x-3 gap-y-1 hover:bg-gray-50 transition">
                 <div class="flex items-center gap-2">
                     <span class="text-lg">🔧</span>
                     <span class="font-semibold text-gray-800">Filtrer par tontine</span>

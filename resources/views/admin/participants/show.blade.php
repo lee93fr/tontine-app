@@ -170,10 +170,10 @@
             @else
                 {{-- Pas de binôme : formulaire de liaison --}}
                 @if($availablePartners->isNotEmpty())
-                <form method="POST" action="{{ route('admin.participants.partner.link', $user) }}" class="flex gap-2">
+                <form method="POST" action="{{ route('admin.participants.partner.link', $user) }}" class="flex flex-col sm:flex-row gap-2">
                     @csrf
                     <select name="partner_id"
-                            class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            class="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         <option value="">— Sélectionner un partenaire —</option>
                         @foreach($availablePartners as $candidate)
                             <option value="{{ $candidate->id }}">{{ $candidate->full_name }} ({{ $candidate->email }})</option>
@@ -221,10 +221,10 @@
             @else
                 {{-- Formulaire de choix --}}
                 @if($availableDelegates->isNotEmpty())
-                <form method="POST" action="{{ route('admin.participants.delegate.set', $user) }}" class="flex gap-2">
+                <form method="POST" action="{{ route('admin.participants.delegate.set', $user) }}" class="flex flex-col sm:flex-row gap-2">
                     @csrf @method('PATCH')
                     <select name="delegate_id"
-                            class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            class="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         <option value="">— Choisir un délégué —</option>
                         @foreach($availableDelegates as $d)
                             <option value="{{ $d->id }}">{{ $d->full_name }} ({{ $d->email }})</option>

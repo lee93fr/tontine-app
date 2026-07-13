@@ -49,7 +49,7 @@
         </div>
         <div class="divide-y divide-gray-100">
             @forelse($tontine->participants as $p)
-            <div class="px-6 py-3 flex items-center justify-between gap-4">
+            <div class="px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
                 <div class="min-w-0">
                     <div class="font-medium text-gray-900 text-sm">{{ $p->full_name }}</div>
                     <div class="text-xs text-gray-400">{{ $p->email }}</div>
@@ -92,7 +92,7 @@
         </div>
 
         @forelse($tontine->rounds->sortBy('round_number') as $round)
-        <div class="px-6 py-4 flex items-center justify-between gap-4 border-b border-gray-100 last:border-0">
+        <div class="px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-100 last:border-0">
             <div class="flex items-center gap-4">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0
                     {{ $round->isPreliminary() ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700' }}">
@@ -113,7 +113,7 @@
                     </div>
                 </div>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
+            <div class="flex items-center flex-wrap gap-2 shrink-0">
                 @php
                     $colors = ['pending'=>'gray','open'=>'green','closed'=>'yellow','drawn'=>'blue','paid'=>'indigo'];
                     $color = $colors[$round->status] ?? 'gray';
