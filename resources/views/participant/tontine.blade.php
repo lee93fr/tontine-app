@@ -250,6 +250,7 @@
                         <p>{{ __('app.space.rules_title') }} {!! __('app.space.rule1', ['cap' => $tontine->bid_cap]) !!}</p>
                         <p>🎲 {!! __('app.space.rule2') !!}</p>
                         <p>🎲 {!! __('app.space.rule3') !!}</p>
+                        <p>🙋 {!! __('app.space.rule5') !!}</p>
                         <p>💡 {{ __('app.space.rule4') }}</p>
                     </div>
 

@@ -45,8 +45,11 @@ class BidService
             return ['success' => false, 'type' => 'error', 'message' => 'Les enchères sont fermées pour ce tour.'];
         }
 
+        // Une enchère à 0% est une inscription volontaire au tirage au sort (pas une
+        // offre compétitive) : plusieurs participants peuvent s'inscrire à 0% sans
+        // se bloquer mutuellement, le tirage au sort les départagera.
         $cap = (int) $round->tontine->bid_cap;
-        if ($amount < $cap) {
+        if ($amount > 0 && $amount < $cap) {
             $currentHighest = (int) $round->bids()->max('amount');
             if ($amount <= $currentHighest) {
                 return ['success' => false, 'type' => 'validation', 'message' => __('app.bid.too_low')];
