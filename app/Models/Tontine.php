@@ -51,7 +51,7 @@ class Tontine extends Model
     {
         return $this->belongsToMany(User::class, 'tontine_user')
                     ->withPivot([
-                        'slots', 'wins_count',
+                        'slots', 'wins_count', 'balance',
                         'signature_submission_id', 'signature_status',
                         'signature_sent_at', 'signed_at', 'signed_pdf_url', 'signature_signer_url',
                         'signature_error',
@@ -80,6 +80,11 @@ class Tontine extends Model
     public function invitations()
     {
         return $this->hasMany(Invitation::class);
+    }
+
+    public function balanceVersions()
+    {
+        return $this->hasMany(ParticipantBalanceVersion::class);
     }
 
     public function getParticipantsCountAttribute(): int
