@@ -105,6 +105,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::get('/tontines/{tontine}/rounds/{round}', [RoundController::class, 'show'])->name('rounds.show');
     Route::get('/tontines/{tontine}/rounds/{round}/recap.pdf', [RoundController::class, 'downloadRecap'])->name('rounds.recap');
     Route::patch('/tontines/{tontine}/rounds/{round}/dates', [RoundController::class, 'updateDates'])->name('rounds.dates.update');
+    Route::patch('/tontines/{tontine}/rounds/{round}/penalties', [RoundController::class, 'updatePenaltyWaiver'])->name('rounds.penalties.update');
     Route::patch('/tontines/{tontine}/rounds/{round}/open', [RoundController::class, 'openRound'])->name('rounds.open');
     Route::patch('/tontines/{tontine}/rounds/{round}/close', [RoundController::class, 'closeRound'])->name('rounds.close');
     Route::patch('/tontines/{tontine}/rounds/{round}/reopen', [RoundController::class, 'reopenRound'])->name('rounds.reopen');
@@ -272,6 +273,7 @@ Route::prefix('espace-admin')->name('admin-local.')->middleware(['auth', 'role:a
     Route::patch('/tontines/{tontine}/rounds/{round}/open', [AdminLocalController::class, 'openRound'])->name('rounds.open');
     Route::patch('/tontines/{tontine}/rounds/{round}/close', [AdminLocalController::class, 'closeRound'])->name('rounds.close');
     Route::patch('/tontines/{tontine}/rounds/{round}/reopen', [AdminLocalController::class, 'reopenRound'])->name('rounds.reopen');
+    Route::patch('/tontines/{tontine}/rounds/{round}/penalties', [AdminLocalController::class, 'updatePenaltyWaiver'])->name('rounds.penalties.update');
     Route::post('/tontines/{tontine}/rounds/{round}/draw', [AdminLocalController::class, 'draw'])->name('rounds.draw');
     Route::delete('/tontines/{tontine}/rounds/{round}/draw', [AdminLocalController::class, 'cancelDraw'])->name('rounds.cancel-draw');
     Route::patch('/tontines/{tontine}/rounds/{round}/payments/{payment}', [AdminLocalController::class, 'updatePayment'])->name('rounds.payments.update');

@@ -316,6 +316,21 @@ class RoundController extends Controller
         return back()->with('success', 'Date de clôture mise à jour.');
     }
 
+    public function updatePenaltyWaiver(Request $request, Tontine $tontine, Round $round)
+    {
+        abort_unless($round->tontine_id === $tontine->id, 404);
+
+        $data = $request->validate([
+            'waive_penalties' => 'required|boolean',
+        ]);
+
+        $round->update(['waive_penalties' => (bool) $data['waive_penalties']]);
+
+        return back()->with('success', $round->waive_penalties
+            ? "Pénalités désactivées pour le tour #{$round->round_number}."
+            : "Pénalités réactivées pour le tour #{$round->round_number}.");
+    }
+
     public function reopenRound(Tontine $tontine, Round $round)
     {
         if ($round->status !== 'closed') {
@@ -419,7 +434,9 @@ class RoundController extends Controller
         if (array_key_exists('reference', $data))     $payment->reference     = $data['reference'];
         if (array_key_exists('notes', $data))         $payment->notes         = $data['notes'];
         if (array_key_exists('due_date', $data))      $payment->due_date      = $data['due_date'];
-        $payment->waive_penalty = (bool) ($data['waive_penalty'] ?? false);
+        if (array_key_exists('waive_penalty', $data)) {
+            $payment->waive_penalty = (bool) $data['waive_penalty'];
+        }
 
         $payment->save();
 

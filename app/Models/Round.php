@@ -13,7 +13,7 @@ class Round extends Model
     protected $fillable = [
         'tontine_id', 'type', 'round_number', 'pot_amount', 'preliminary_amount',
         'bid_opens_at', 'bid_closes_at', 'payment_due_at', 'payout_date', 'status',
-        'winner_id', 'winning_bid', 'drawn_by_lot', 'notes',
+        'winner_id', 'winning_bid', 'drawn_by_lot', 'waive_penalties', 'notes',
     ];
 
     protected $casts = [
@@ -25,6 +25,7 @@ class Round extends Model
         'preliminary_amount' => 'decimal:2',
         'winning_bid'     => 'decimal:2',
         'drawn_by_lot'    => 'boolean',
+        'waive_penalties' => 'boolean',
     ];
 
     public function isPreliminary(): bool

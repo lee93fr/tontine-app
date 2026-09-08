@@ -73,9 +73,9 @@ class Payment extends Model
         return max(0, $days);
     }
 
-    public function penaltyAmount(float $perDay, ?float $cap): float
+    public function penaltyAmount(float $perDay, ?float $cap, bool $roundWaived = false): float
     {
-        if ($this->waive_penalty) {
+        if ($roundWaived || $this->waive_penalty) {
             return 0.0;
         }
         $penalty = $this->daysLate() * $perDay;

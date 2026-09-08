@@ -458,6 +458,22 @@ class AdminLocalController extends Controller
         return view('admin_local.rounds.show', compact('tontine', 'round', 'canEdit', 'hasOtherOpenRound'));
     }
 
+    public function updatePenaltyWaiver(Request $request, Tontine $tontine, Round $round)
+    {
+        $this->assertOwnership($tontine);
+        abort_unless($round->tontine_id === $tontine->id, 404);
+
+        $data = $request->validate([
+            'waive_penalties' => 'required|boolean',
+        ]);
+
+        $round->update(['waive_penalties' => (bool) $data['waive_penalties']]);
+
+        return back()->with('success', $round->waive_penalties
+            ? "Pénalités désactivées pour le tour #{$round->round_number}."
+            : "Pénalités réactivées pour le tour #{$round->round_number}.");
+    }
+
     public function downloadRecap(Tontine $tontine, Round $round, RoundRecapPdfService $recapPdf)
     {
         $this->assertAccess($tontine);
