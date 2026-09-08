@@ -13,6 +13,7 @@ use App\Notifications\RoundOpenedNotification;
 use App\Notifications\RoundResultNotification;
 use Carbon\Carbon;
 use App\Services\ParticipantSignatureService;
+use App\Services\ParticipantBalanceService;
 use App\Services\RoundRecapPdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -175,7 +176,7 @@ class AdminLocalController extends Controller
         $this->assertAccess($tontine);
 
         $canEdit = $this->canEdit($tontine);
-        $tontine->load(['participants', 'rounds.winner', 'rounds.bids']);
+        $tontine->load(['participants', 'rounds.winner', 'rounds.bids', 'balanceVersions.changedBy']);
 
         $nonMembers = $canEdit
             ? User::where('role', 'participant')
@@ -416,6 +417,33 @@ class AdminLocalController extends Controller
         $tontine->recalcPotAmounts();
 
         return back()->with('success', 'Participant retiré.');
+    }
+
+    public function updateParticipantBalance(
+        Request $request,
+        Tontine $tontine,
+        User $user,
+        ParticipantBalanceService $balances,
+    )
+    {
+        $this->assertOwnership($tontine);
+
+        $data = $request->validate([
+            'balance' => 'required|numeric|between:-9999999999.99,9999999999.99',
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $changed = $balances->update(
+            $tontine,
+            $user,
+            $request->user(),
+            (float) $data['balance'],
+            $data['reason'] ?? null,
+        );
+
+        return back()->with('success', $changed
+            ? "Solde de {$user->full_name} mis à jour et version enregistrée."
+            : "Solde de {$user->full_name} inchangé.");
     }
 
     // ─── Rounds ─────────────────────────────────────────────────────────────

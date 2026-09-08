@@ -38,6 +38,7 @@
         $me            = auth()->user();
         $myParticipant = $tontine->participants->firstWhere('id', $me->primaryUser()->id);
         $myPivot       = $myParticipant?->pivot ?? null;
+        $myBalance     = (float) ($myPivot?->balance ?? 0);
 
         if ($me->partner_id !== null) {
             $primary   = $tontine->participants->firstWhere('id', $me->partner->id ?? null);
@@ -81,6 +82,32 @@
             }
         }
     @endphp
+
+    <div class="rounded-xl border p-4 {{ $myBalance > 0 ? 'bg-green-50 border-green-200' : ($myBalance < 0 ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200') }}">
+        <div class="text-xs uppercase tracking-wide text-gray-500">Mon solde dans cette tontine</div>
+        <div class="text-2xl font-bold mt-1 {{ $myBalance > 0 ? 'text-green-700' : ($myBalance < 0 ? 'text-red-700' : 'text-gray-700') }}">
+            {{ $myBalance > 0 ? '+' : '' }}{{ number_format($myBalance, 2, ',', ' ') }} €
+        </div>
+        <div class="text-xs text-gray-500 mt-1">
+            {{ $myBalance > 0 ? 'Vous disposez de cet avoir.' : ($myBalance < 0 ? 'Vous devez ce montant à la tontine.' : 'Votre solde est à jour.') }}
+        </div>
+        @if($tontine->balanceVersions->isNotEmpty())
+        <details class="text-xs text-gray-500 mt-3 border-t border-current/10 pt-2">
+            <summary class="cursor-pointer font-medium">Voir l’historique ({{ $tontine->balanceVersions->count() }})</summary>
+            <ol class="mt-2 space-y-1">
+                @foreach($tontine->balanceVersions as $version)
+                <li>
+                    <strong>v{{ $version->version }}</strong> —
+                    {{ number_format((float) $version->previous_balance, 2, ',', ' ') }} € →
+                    {{ number_format((float) $version->new_balance, 2, ',', ' ') }} €
+                    · {{ $version->created_at->format('d/m/Y H:i') }}
+                    @if($version->reason) · {{ $version->reason }} @endif
+                </li>
+                @endforeach
+            </ol>
+        </details>
+        @endif
+    </div>
 
     {{-- ONGLETS --}}
     <div x-data="{ tab: '{{ session('success') || session('error') ? 'aide' : 'tour' }}' }">

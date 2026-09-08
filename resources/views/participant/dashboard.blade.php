@@ -66,6 +66,7 @@
                 'failed'   => ['bg-red-100',    'text-red-700',    '✗ Erreur envoi'],
                 default    => null,
             };
+            $balance = (float) ($tontine->pivot->balance ?? 0);
         @endphp
         <a href="{{ route('participant.tontine', $tontine) }}"
            class="block bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:border-indigo-300 hover:shadow-md transition mb-3">
@@ -74,6 +75,10 @@
                     <div class="font-semibold text-gray-900">{{ $tontine->name }}</div>
                     <div class="text-sm text-gray-500 mt-1">
                         {{ __('app.space.contribution') }} : {{ number_format($tontine->cotisation_amount,2) }} € {{ __('app.common.months') }}
+                    </div>
+                    <div class="text-sm font-semibold mt-1 {{ $balance > 0 ? 'text-green-700' : ($balance < 0 ? 'text-red-700' : 'text-gray-500') }}">
+                        Solde : {{ $balance > 0 ? '+' : '' }}{{ number_format($balance, 2, ',', ' ') }} €
+                        <span class="font-normal">{{ $balance > 0 ? '(votre avoir)' : ($balance < 0 ? '(montant dû)' : '') }}</span>
                     </div>
                     @if($sigBadge)
                     <div class="mt-2 flex items-center gap-2 flex-wrap">

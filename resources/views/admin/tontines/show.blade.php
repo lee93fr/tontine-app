@@ -408,6 +408,15 @@
 
                                     <div class="text-xs text-gray-400">{{ $p->email }}</div>
 
+                                    @php
+                                        $balance = (float) ($p->pivot->balance ?? 0);
+                                        $balanceHistory = $tontine->balanceVersions->where('user_id', $p->id)->sortByDesc('version');
+                                    @endphp
+                                    <div class="text-xs font-semibold {{ $balance > 0 ? 'text-green-700' : ($balance < 0 ? 'text-red-700' : 'text-gray-500') }}">
+                                        Solde : {{ $balance > 0 ? '+' : '' }}{{ number_format($balance, 2, ',', ' ') }} €
+                                        <span class="font-normal">{{ $balance > 0 ? '(avoir du membre)' : ($balance < 0 ? '(à encaisser)' : '(à jour)') }}</span>
+                                    </div>
+
                                     {{-- Actions --}}
                                     <div class="flex items-center gap-2 flex-wrap pt-0.5">
                                         @if($isTresorier)
@@ -438,7 +447,40 @@
                                                     onclick="return confirm('{{ __('app.common.confirm') }} ?')"
                                                     class="text-red-400 hover:text-red-600 text-xs">{{ __('app.common.remove') }}</button>
                                         @endif
+
+                                        <div class="flex items-center gap-1">
+                                            <label for="balance-{{ $p->id }}" class="sr-only">Solde de {{ $p->full_name }}</label>
+                                            <input id="balance-{{ $p->id }}" form="balance-form-{{ $p->id }}" type="number" name="balance" step="0.01"
+                                                   value="{{ number_format($balance, 2, '.', '') }}"
+                                                   class="w-24 text-xs border border-gray-300 rounded px-1.5 py-1"
+                                                   title="Négatif = le membre doit de l’argent à la tontine ; positif = le membre dispose d’un avoir" required>
+                                            <input form="balance-form-{{ $p->id }}" type="text" name="reason" maxlength="500" placeholder="Motif (facultatif)"
+                                                   class="w-36 text-xs border border-gray-300 rounded px-1.5 py-1">
+                                            <button form="balance-form-{{ $p->id }}" type="submit" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2 py-1 rounded">
+                                                Solde
+                                            </button>
+                                        </div>
                                     </div>
+
+                                    @if($balanceHistory->isNotEmpty())
+                                    <details class="text-xs text-gray-500 pt-1">
+                                        <summary class="cursor-pointer text-indigo-600 hover:text-indigo-800">
+                                            Historique ({{ $balanceHistory->count() }} version{{ $balanceHistory->count() > 1 ? 's' : '' }})
+                                        </summary>
+                                        <ol class="mt-2 space-y-1 border-l-2 border-gray-100 pl-3">
+                                            @foreach($balanceHistory as $version)
+                                            <li>
+                                                <strong>v{{ $version->version }}</strong> —
+                                                {{ number_format((float) $version->previous_balance, 2, ',', ' ') }} € →
+                                                {{ number_format((float) $version->new_balance, 2, ',', ' ') }} €
+                                                · {{ $version->created_at->format('d/m/Y H:i') }}
+                                                @if($version->changedBy) · par {{ $version->changedBy->full_name }} @endif
+                                                @if($version->reason) · {{ $version->reason }} @endif
+                                            </li>
+                                            @endforeach
+                                        </ol>
+                                    </details>
+                                    @endif
                                 </div>
                             </div>
 
@@ -585,6 +627,10 @@
                         @csrf @method('DELETE')
                     </form>
                 @endif
+                <form id="balance-form-{{ $p->id }}" method="POST"
+                      action="{{ route('admin.tontines.participants.balance', [$tontine, $p]) }}" class="hidden">
+                    @csrf @method('PATCH')
+                </form>
             @endforeach
 
             {{-- Ajouter un membre existant --}}

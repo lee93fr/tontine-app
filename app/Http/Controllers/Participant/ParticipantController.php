@@ -81,7 +81,9 @@ class ParticipantController extends Controller
 
         $tontine->load(['rounds' => function ($q) {
             $q->orderByDesc('round_number')->with(['bids.user', 'winner']);
-        }, 'participants', 'participants.partnerOf']);
+        }, 'participants', 'participants.partnerOf', 'balanceVersions' => function ($q) use ($primaryUser) {
+            $q->where('user_id', $primaryUser->id)->with('changedBy')->orderByDesc('version');
+        }]);
 
         $currentRound = $tontine->rounds->firstWhere('status', 'open')
                      ?? $tontine->rounds->firstWhere('status', 'pending');

@@ -98,6 +98,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('/tontines/{tontine}/participants', [AdminController::class, 'addParticipant'])->name('tontines.participants.add');
     Route::delete('/tontines/{tontine}/participants/{user}', [AdminController::class, 'removeParticipant'])->name('tontines.participants.remove');
     Route::patch('/tontines/{tontine}/participants/{user}/slots', [AdminController::class, 'updateParticipantSlots'])->name('tontines.participants.slots');
+    Route::patch('/tontines/{tontine}/participants/{user}/balance', [AdminController::class, 'updateParticipantBalance'])->name('tontines.participants.balance');
     Route::post('/tontines/{tontine}/participants/{user}/replace', [AdminController::class, 'replaceParticipant'])->name('tontines.participants.replace');
     Route::get('/tontines/{tontine}/rounds/create', [RoundController::class, 'create'])->name('rounds.create');
     Route::post('/tontines/{tontine}/rounds', [RoundController::class, 'store'])->name('rounds.store');
@@ -262,6 +263,7 @@ Route::prefix('espace-admin')->name('admin-local.')->middleware(['auth', 'role:a
     // Participants
     Route::post('/tontines/{tontine}/participants', [AdminLocalController::class, 'addParticipant'])->name('tontines.participants.add');
     Route::delete('/tontines/{tontine}/participants/{user}', [AdminLocalController::class, 'removeParticipant'])->name('tontines.participants.remove');
+    Route::patch('/tontines/{tontine}/participants/{user}/balance', [AdminLocalController::class, 'updateParticipantBalance'])->name('tontines.participants.balance');
     Route::patch('/tontines/{tontine}/participants-lock', [AdminLocalController::class, 'toggleParticipantsLock'])->name('tontines.participants.lock');
 
     // Tours

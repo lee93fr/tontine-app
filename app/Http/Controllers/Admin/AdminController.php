@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Bid;
 use App\Models\Payment;
+use App\Models\ParticipantBalanceVersion;
 use App\Models\Tontine;
 use App\Models\TontineRegulation;
 use App\Models\User;
 use App\Models\Round;
 use App\Services\DocusealService;
 use App\Services\ParticipantSignatureService;
+use App\Services\ParticipantBalanceService;
 use App\Services\RegulationService;
 use App\Services\TontineRegulationService;
 use Carbon\Carbon;
@@ -383,7 +385,7 @@ class AdminController extends Controller
 
     public function showTontine(Tontine $tontine)
     {
-        $tontine->load(['participants', 'rounds.winner', 'rounds.bids']);
+        $tontine->load(['participants', 'rounds.winner', 'rounds.bids', 'balanceVersions.changedBy']);
         $nonMembers = User::where('role', 'participant')
                           ->where('active', true)
                           ->whereDoesntHave('tontines', fn($q) => $q->where('tontine_id', $tontine->id))
@@ -743,6 +745,31 @@ class AdminController extends Controller
         return back()->with('success', __('app.tontine.msg_slots_updated', ['name' => $user->name]));
     }
 
+    public function updateParticipantBalance(
+        Request $request,
+        Tontine $tontine,
+        User $user,
+        ParticipantBalanceService $balances,
+    )
+    {
+        $data = $request->validate([
+            'balance' => 'required|numeric|between:-9999999999.99,9999999999.99',
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $changed = $balances->update(
+            $tontine,
+            $user,
+            $request->user(),
+            (float) $data['balance'],
+            $data['reason'] ?? null,
+        );
+
+        return back()->with('success', $changed
+            ? "Solde de {$user->full_name} mis à jour et version enregistrée."
+            : "Solde de {$user->full_name} inchangé.");
+    }
+
     public function replaceParticipant(Request $request, Tontine $tontine, User $user)
     {
         $oldUser = $user;
@@ -781,12 +808,33 @@ class AdminController extends Controller
         $pivot     = $tontine->participants()->where('user_id', $oldUser->id)->first()->pivot;
         $slots     = $pivot->slots;
         $winsCount = $pivot->wins_count;
+        $balance   = $pivot->balance;
 
-        DB::transaction(function () use ($tontine, $oldUser, $newUser, $slots, $winsCount) {
+        DB::transaction(function () use ($tontine, $oldUser, $newUser, $slots, $winsCount, $balance) {
             $roundIds = $tontine->rounds()->pluck('id');
 
             $tontine->participants()->detach($oldUser->id);
-            $tontine->participants()->attach($newUser->id, ['slots' => $slots, 'wins_count' => $winsCount]);
+            $tontine->participants()->attach($newUser->id, [
+                'slots' => $slots,
+                'wins_count' => $winsCount,
+                'balance' => $balance,
+            ]);
+
+            if ((float) $balance !== 0.0) {
+                $version = ((int) ParticipantBalanceVersion::where('tontine_id', $tontine->id)
+                    ->where('user_id', $newUser->id)
+                    ->max('version')) + 1;
+
+                ParticipantBalanceVersion::create([
+                    'tontine_id' => $tontine->id,
+                    'user_id' => $newUser->id,
+                    'version' => $version,
+                    'previous_balance' => 0,
+                    'new_balance' => $balance,
+                    'reason' => "Solde transféré lors du remplacement de {$oldUser->full_name}.",
+                    'changed_by' => auth()->id(),
+                ]);
+            }
 
             Payment::whereIn('round_id', $roundIds)->where('user_id', $oldUser->id)
                    ->update(['user_id' => $newUser->id]);

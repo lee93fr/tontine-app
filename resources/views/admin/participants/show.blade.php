@@ -117,9 +117,15 @@
             @foreach($user->tontines as $t)
             <li class="px-6 py-3 flex items-center justify-between">
                 <span class="text-sm text-gray-900">{{ $t->name }}</span>
-                <a href="{{ route('admin.tontines.show', $t) }}" class="text-xs text-indigo-600 hover:text-indigo-800">
-                    {{ __('app.tontine.manage') }}
-                </a>
+                <div class="flex items-center gap-3">
+                    @php $balance = (float) ($t->pivot->balance ?? 0); @endphp
+                    <span class="text-xs font-semibold {{ $balance > 0 ? 'text-green-700' : ($balance < 0 ? 'text-red-700' : 'text-gray-500') }}">
+                        {{ $balance > 0 ? '+' : '' }}{{ number_format($balance, 2, ',', ' ') }} €
+                    </span>
+                    <a href="{{ route('admin.tontines.show', $t) }}" class="text-xs text-indigo-600 hover:text-indigo-800">
+                        {{ __('app.tontine.manage') }}
+                    </a>
+                </div>
             </li>
             @endforeach
         </ul>
