@@ -91,6 +91,7 @@
         <div class="text-xs text-gray-500 mt-1">
             {{ $myBalance > 0 ? 'Vous disposez de cet avoir.' : ($myBalance < 0 ? 'Vous devez ce montant à la tontine.' : 'Votre solde est à jour.') }}
         </div>
+        <div class="text-xs text-gray-400 mt-1">Les montants versés au-delà de la cotisation sont ajoutés automatiquement à votre avoir.</div>
         @if($tontine->balanceVersions->isNotEmpty())
         <details class="text-xs text-gray-500 mt-3 border-t border-current/10 pt-2">
             <summary class="cursor-pointer font-medium">Voir l’historique ({{ $tontine->balanceVersions->count() }})</summary>

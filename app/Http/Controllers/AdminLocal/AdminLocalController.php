@@ -629,9 +629,18 @@ class AdminLocalController extends Controller
         $round->update(['pot_amount' => round($preliminaryPortion + $nonWinnerTotal, 2)]);
     }
 
-    public function updatePayment(Request $request, Tontine $tontine, Round $round, Payment $payment)
+    public function updatePayment(
+        Request $request,
+        Tontine $tontine,
+        Round $round,
+        Payment $payment,
+        ParticipantBalanceService $balances,
+    )
     {
         $this->assertOwnership($tontine);
+        abort_unless($round->tontine_id === $tontine->id, 404);
+        abort_unless($payment->round_id === $round->id, 404);
+        abort_unless($tontine->participants()->where('user_id', $payment->user_id)->exists(), 404);
 
         if (! $round->isPreliminary() && ! $round->winner_id) {
             return back()->withErrors(['payment' => 'Le gagnant doit être désigné avant de saisir les paiements de cotisations.']);
@@ -643,6 +652,8 @@ class AdminLocalController extends Controller
             'reference'   => 'nullable|string|max:255',
             'notes'       => 'nullable|string',
         ]);
+
+        $previousOverpayment = max(0, round((float) $payment->paid_amount - (float) $payment->amount, 2));
 
         if (array_key_exists('paid_amount', $data)) {
             $payment->paid_amount = (float) ($data['paid_amount'] ?? 0);
@@ -664,6 +675,15 @@ class AdminLocalController extends Controller
         if (array_key_exists('notes', $data))     $payment->notes = $data['notes'];
 
         $payment->save();
+
+        $newOverpayment = max(0, round((float) $payment->paid_amount - (float) $payment->amount, 2));
+        $balances->adjust(
+            $tontine,
+            $payment->user,
+            $request->user(),
+            $newOverpayment - $previousOverpayment,
+            "Ajustement automatique du trop-perçu — tour #{$round->round_number}, paiement #{$payment->id}.",
+        );
 
         return back()->with('success', 'Paiement mis à jour.');
     }

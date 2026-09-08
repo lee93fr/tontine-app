@@ -16,7 +16,43 @@ class ParticipantBalanceService
         float $newBalance,
         ?string $reason = null,
     ): bool {
-        return DB::transaction(function () use ($tontine, $participant, $actor, $newBalance, $reason) {
+        return $this->change(
+            $tontine,
+            $participant,
+            $actor,
+            fn (float $currentBalance) => $newBalance,
+            $reason,
+        );
+    }
+
+    public function adjust(
+        Tontine $tontine,
+        User $participant,
+        User $actor,
+        float $amount,
+        ?string $reason = null,
+    ): bool {
+        if (round($amount, 2) === 0.0) {
+            return false;
+        }
+
+        return $this->change(
+            $tontine,
+            $participant,
+            $actor,
+            fn (float $currentBalance) => $currentBalance + $amount,
+            $reason,
+        );
+    }
+
+    private function change(
+        Tontine $tontine,
+        User $participant,
+        User $actor,
+        \Closure $newBalanceResolver,
+        ?string $reason,
+    ): bool {
+        return DB::transaction(function () use ($tontine, $participant, $actor, $newBalanceResolver, $reason) {
             $membership = DB::table('tontine_user')
                 ->where('tontine_id', $tontine->id)
                 ->where('user_id', $participant->id)
@@ -26,7 +62,7 @@ class ParticipantBalanceService
             abort_unless($membership, 404);
 
             $previousBalance = round((float) ($membership->balance ?? 0), 2);
-            $newBalance = round($newBalance, 2);
+            $newBalance = round($newBalanceResolver($previousBalance), 2);
 
             if ($previousBalance === $newBalance) {
                 return false;

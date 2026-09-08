@@ -95,6 +95,7 @@
                             Solde : {{ $balance > 0 ? '+' : '' }}{{ number_format($balance, 2, ',', ' ') }} €
                             <span class="font-normal">{{ $balance > 0 ? '(avoir du membre)' : ($balance < 0 ? '(à encaisser)' : '(à jour)') }}</span>
                         </div>
+                        <div class="text-[11px] text-gray-400">Inclut automatiquement les trop-perçus.</div>
                         @if($balanceHistory->isNotEmpty())
                         <details class="text-xs text-gray-500 mt-1">
                             <summary class="cursor-pointer text-indigo-600 hover:text-indigo-800">
