@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Payment;
 use App\Models\Tontine;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -100,6 +101,62 @@ class ParticipantBalanceTest extends TestCase
             'new_balance' => -20,
         ]);
         $this->assertDatabaseCount('participant_balance_versions', 2);
+    }
+
+    public function test_payment_overpayment_is_added_to_the_balance_and_versioned(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $member = User::factory()->create(['role' => 'participant']);
+        $tontine = $this->createTontine('Tontine avec trop-perçu');
+        $tontine->participants()->attach($member->id);
+
+        $round = $tontine->rounds()->create([
+            'type' => 'preliminary',
+            'round_number' => 1,
+            'pot_amount' => 100,
+            'bid_opens_at' => now()->subDay(),
+            'bid_closes_at' => now()->addDay(),
+            'status' => 'pending',
+        ]);
+        $payment = Payment::create([
+            'round_id' => $round->id,
+            'user_id' => $member->id,
+            'amount' => 100,
+            'paid_amount' => 0,
+            'status' => 'pending',
+        ]);
+        $url = route('admin.rounds.payments.update', [$tontine, $round, $payment]);
+
+        $this->actingAs($admin)->patch($url, ['paid_amount' => 120])->assertRedirect();
+
+        $this->assertDatabaseHas('tontine_user', [
+            'tontine_id' => $tontine->id,
+            'user_id' => $member->id,
+            'balance' => 20,
+        ]);
+        $this->assertDatabaseHas('participant_balance_versions', [
+            'tontine_id' => $tontine->id,
+            'user_id' => $member->id,
+            'version' => 1,
+            'previous_balance' => 0,
+            'new_balance' => 20,
+            'changed_by' => $admin->id,
+        ]);
+
+        $this->actingAs($admin)->patch($url, ['paid_amount' => 105])->assertRedirect();
+
+        $this->assertDatabaseHas('tontine_user', [
+            'tontine_id' => $tontine->id,
+            'user_id' => $member->id,
+            'balance' => 5,
+        ]);
+        $this->assertDatabaseHas('participant_balance_versions', [
+            'tontine_id' => $tontine->id,
+            'user_id' => $member->id,
+            'version' => 2,
+            'previous_balance' => 20,
+            'new_balance' => 5,
+        ]);
     }
 
     private function createTontine(string $name): Tontine

@@ -11,6 +11,7 @@ use App\Notifications\PaymentReminderNotification;
 use App\Notifications\RoundOpenedNotification;
 use App\Notifications\RoundResultNotification;
 use App\Services\BidService;
+use App\Services\ParticipantBalanceService;
 use App\Services\RoundRecapPdfService;
 use App\Services\SmsNotificationService;
 use Illuminate\Http\Request;
@@ -368,8 +369,18 @@ class RoundController extends Controller
         return back()->with('success', __('app.round.msg_draw_cancelled'));
     }
 
-    public function updatePayment(Request $request, Tontine $tontine, Round $round, Payment $payment)
+    public function updatePayment(
+        Request $request,
+        Tontine $tontine,
+        Round $round,
+        Payment $payment,
+        ParticipantBalanceService $balances,
+    )
     {
+        abort_unless($round->tontine_id === $tontine->id, 404);
+        abort_unless($payment->round_id === $round->id, 404);
+        abort_unless($tontine->participants()->where('user_id', $payment->user_id)->exists(), 404);
+
         if (! $round->isPreliminary() && ! $round->winner_id) {
             return back()->withErrors(['payment' => 'Le gagnant doit être désigné avant de saisir les paiements de cotisations.']);
         }
@@ -382,6 +393,8 @@ class RoundController extends Controller
             'due_date'      => 'nullable|date',
             'waive_penalty' => 'nullable|boolean',
         ]);
+
+        $previousOverpayment = max(0, round((float) $payment->paid_amount - (float) $payment->amount, 2));
 
         if (array_key_exists('paid_amount', $data)) {
             $payment->paid_amount = (float) ($data['paid_amount'] ?? 0);
@@ -409,6 +422,15 @@ class RoundController extends Controller
         $payment->waive_penalty = (bool) ($data['waive_penalty'] ?? false);
 
         $payment->save();
+
+        $newOverpayment = max(0, round((float) $payment->paid_amount - (float) $payment->amount, 2));
+        $balances->adjust(
+            $tontine,
+            $payment->user,
+            $request->user(),
+            $newOverpayment - $previousOverpayment,
+            "Ajustement automatique du trop-perçu — tour #{$round->round_number}, paiement #{$payment->id}.",
+        );
 
         return back()->with('success', __('app.round.msg_payment_updated'));
     }

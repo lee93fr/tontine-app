@@ -9,6 +9,7 @@ use App\Models\Tontine;
 use App\Models\User;
 use App\Notifications\PaymentReminderNotification;
 use App\Services\BidService;
+use App\Services\ParticipantBalanceService;
 use App\Services\RoundRecapPdfService;
 use App\Services\SmsNotificationService;
 use Illuminate\Http\Request;
@@ -124,11 +125,17 @@ class TresorierController extends Controller
         return back()->with('success', "Enchère de {$user->full_name} annulée.");
     }
 
-    public function updatePayment(Request $request, Round $round, Payment $payment)
+    public function updatePayment(
+        Request $request,
+        Round $round,
+        Payment $payment,
+        ParticipantBalanceService $balances,
+    )
     {
         $tontine = $this->tontine();
         abort_unless($round->tontine_id === $tontine->id, 403);
         abort_unless($payment->round_id === $round->id, 403);
+        abort_unless($tontine->participants()->where('user_id', $payment->user_id)->exists(), 403);
 
         if (! $round->isPreliminary() && ! $round->winner_id) {
             return back()->withErrors(['payment' => 'Le gagnant doit être désigné avant de saisir les paiements de cotisations.']);
@@ -140,6 +147,8 @@ class TresorierController extends Controller
             'reference'   => 'nullable|string|max:255',
             'notes'       => 'nullable|string',
         ]);
+
+        $previousOverpayment = max(0, round((float) $payment->paid_amount - (float) $payment->amount, 2));
 
         // Mode 1 : l'admin saisit un montant payé → on dérive le statut automatiquement
         if (array_key_exists('paid_amount', $data)) {
@@ -173,6 +182,15 @@ class TresorierController extends Controller
         }
 
         $payment->save();
+
+        $newOverpayment = max(0, round((float) $payment->paid_amount - (float) $payment->amount, 2));
+        $balances->adjust(
+            $tontine,
+            $payment->user,
+            $request->user(),
+            $newOverpayment - $previousOverpayment,
+            "Ajustement automatique du trop-perçu — tour #{$round->round_number}, paiement #{$payment->id}.",
+        );
 
         return back()->with('success', __('app.round.msg_payment_updated'));
     }
