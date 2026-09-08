@@ -409,6 +409,8 @@
     </main>
     <footer class="mt-16 py-6 border-t border-gray-200 text-center text-gray-400 text-sm">
         TontineApp &copy; {{ date('Y') }}
+        <span class="mx-1.5 text-gray-300">·</span>
+        <span class="text-xs text-gray-400" title="Version de l’application">v{{ config('app.version') }}</span>
     </footer>
     <script>
     function formatIban(el) {
