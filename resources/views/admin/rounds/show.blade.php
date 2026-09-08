@@ -20,10 +20,24 @@
                 @if($round->isPreliminary())
                     <span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">{{ __('app.round.preliminary_badge') }}</span>
                 @endif
+                @if($round->waive_penalties)
+                    <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Pénalités désactivées</span>
+                @endif
             </div>
         </div>
 
         <div class="flex gap-2 flex-wrap">
+            @if((float) $tontine->penalty_per_day > 0 || $round->waive_penalties)
+            <form method="POST" action="{{ route('admin.rounds.penalties.update', [$tontine, $round]) }}"
+                  onsubmit="return confirm('{{ $round->waive_penalties ? 'Réactiver les pénalités pour tout ce tour ?' : 'Désactiver les pénalités pour tous les membres de ce tour ?' }}')">
+                @csrf @method('PATCH')
+                <input type="hidden" name="waive_penalties" value="{{ $round->waive_penalties ? 0 : 1 }}">
+                <button class="px-4 py-2 rounded-lg font-medium text-sm {{ $round->waive_penalties ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-800' : 'bg-gray-100 hover:bg-gray-200 text-gray-700' }}">
+                    {{ $round->waive_penalties ? '↩ Réactiver les pénalités' : '⊘ Désactiver les pénalités' }}
+                </button>
+            </form>
+            @endif
+
             <a href="{{ route('admin.rounds.recap', [$tontine, $round]) }}" target="_blank" rel="noopener"
                class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium text-sm">
                 {{ __('app.round.recap_pdf_btn') }}
@@ -273,7 +287,8 @@
                 $daysLate = $payment->daysLate();
                 $penalty  = $payment->penaltyAmount(
                     (float) $tontine->penalty_per_day,
-                    $tontine->penalty_cap !== null ? (float) $tontine->penalty_cap : null
+                    $tontine->penalty_cap !== null ? (float) $tontine->penalty_cap : null,
+                    $round->waive_penalties
                 );
             @endphp
             <div class="px-6 py-3 border-b border-gray-50 last:border-0">
@@ -336,6 +351,9 @@
                                value="{{ $payment->due_date?->format('Y-m-d') }}"
                                title="Date de règlement" {{ $paymentsLocked ? 'disabled' : '' }}
                                class="text-xs border border-gray-300 rounded px-2 py-1">
+                        @if($round->waive_penalties)
+                        <span class="text-xs text-emerald-700 font-medium">Dispense appliquée à tout le tour</span>
+                        @else
                         <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer" title="Dispenser de pénalité pour ce paiement">
                             <input type="hidden" name="waive_penalty" value="0">
                             <input type="checkbox" name="waive_penalty" value="1"
@@ -344,6 +362,7 @@
                                    class="rounded text-indigo-600">
                             Pas de pénalité
                         </label>
+                        @endif
                         <button {{ $paymentsLocked ? 'disabled' : '' }}
                                 class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded">✓</button>
                     </form>

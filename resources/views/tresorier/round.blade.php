@@ -229,7 +229,8 @@
             $daysLate = $payment->daysLate();
             $penalty  = $payment->penaltyAmount(
                 (float) $tontine->penalty_per_day,
-                $tontine->penalty_cap !== null ? (float) $tontine->penalty_cap : null
+                $tontine->penalty_cap !== null ? (float) $tontine->penalty_cap : null,
+                $round->waive_penalties
             );
         @endphp
         <div class="px-6 py-3 border-b border-gray-50 last:border-0">

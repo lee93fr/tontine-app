@@ -497,7 +497,11 @@
                             $daysLate = $payment->daysLate();
                             $isLate   = $payment->status === 'late' || ($payment->status === 'pending' && $daysLate > 0);
                             $penalty  = $tontine->penalty_per_day > 0
-                                ? $payment->penaltyAmount((float) $tontine->penalty_per_day, $tontine->penalty_cap !== null ? (float) $tontine->penalty_cap : null)
+                                ? $payment->penaltyAmount(
+                                    (float) $tontine->penalty_per_day,
+                                    $tontine->penalty_cap !== null ? (float) $tontine->penalty_cap : null,
+                                    $payment->round->waive_penalties
+                                )
                                 : 0;
                         @endphp
                         <tr class="{{ $isLate && $payment->status !== 'paid' ? 'bg-red-50' : ($payment->status === 'paid' ? 'bg-green-50/40' : 'hover:bg-gray-50') }}">
@@ -527,7 +531,7 @@
                             <td class="px-6 py-3 text-gray-500">{{ $payment->paid_at ? $payment->paid_at->format('d/m/Y') : '—' }}</td>
                             @if($tontine->penalty_per_day > 0)
                             <td class="px-6 py-3 {{ $penalty > 0 ? 'text-red-600 font-medium' : 'text-gray-400' }}">
-                                {{ $penalty > 0 ? number_format($penalty, 2).' €' : '—' }}
+                                {{ $payment->round->waive_penalties ? 'Dispensée' : ($penalty > 0 ? number_format($penalty, 2).' €' : '—') }}
                             </td>
                             @endif
                         </tr>

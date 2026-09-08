@@ -20,6 +20,9 @@
                 @if($round->isPreliminary())
                     <span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">Préliminaire</span>
                 @endif
+                @if($round->waive_penalties)
+                    <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Pénalités désactivées</span>
+                @endif
                 @if(!$canEdit)
                     <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">Lecture seule</span>
                 @endif
@@ -27,6 +30,17 @@
         </div>
 
         <div class="flex gap-2 flex-wrap">
+            @if($canEdit && ((float) $tontine->penalty_per_day > 0 || $round->waive_penalties))
+            <form method="POST" action="{{ route('admin-local.rounds.penalties.update', [$tontine, $round]) }}"
+                  onsubmit="return confirm('{{ $round->waive_penalties ? 'Réactiver les pénalités pour tout ce tour ?' : 'Désactiver les pénalités pour tous les membres de ce tour ?' }}')">
+                @csrf @method('PATCH')
+                <input type="hidden" name="waive_penalties" value="{{ $round->waive_penalties ? 0 : 1 }}">
+                <button class="px-4 py-2 rounded-lg font-medium text-sm {{ $round->waive_penalties ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-800' : 'bg-gray-100 hover:bg-gray-200 text-gray-700' }}">
+                    {{ $round->waive_penalties ? '↩ Réactiver les pénalités' : '⊘ Désactiver les pénalités' }}
+                </button>
+            </form>
+            @endif
+
             <a href="{{ route('admin-local.rounds.recap', [$tontine, $round]) }}" target="_blank" rel="noopener"
                class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium text-sm">
                 {{ __('app.round.recap_pdf_btn') }}
@@ -232,7 +246,8 @@
                 $daysLate = $payment->daysLate();
                 $penalty  = $payment->penaltyAmount(
                     (float) $tontine->penalty_per_day,
-                    $tontine->penalty_cap !== null ? (float) $tontine->penalty_cap : null
+                    $tontine->penalty_cap !== null ? (float) $tontine->penalty_cap : null,
+                    $round->waive_penalties
                 );
             @endphp
             <div class="px-6 py-3 border-b border-gray-50 last:border-0">

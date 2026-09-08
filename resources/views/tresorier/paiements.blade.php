@@ -109,6 +109,9 @@
                     @else
                         <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-medium">Tour #{{ $round->round_number }}</span>
                     @endif
+                    @if($round->waive_penalties)
+                        <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Sans pénalités</span>
+                    @endif
                     <span class="text-xs text-gray-500">
                         Échéance : {{ $round->payment_due_at ? \Carbon\Carbon::parse($round->payment_due_at)->format('d/m/Y') : '—' }}
                     </span>
@@ -123,7 +126,8 @@
                 $daysLate = $payment->daysLate();
                 $penalty  = $payment->penaltyAmount(
                     (float) $tontine->penalty_per_day,
-                    $tontine->penalty_cap !== null ? (float) $tontine->penalty_cap : null
+                    $tontine->penalty_cap !== null ? (float) $tontine->penalty_cap : null,
+                    $round->waive_penalties
                 );
                 $remaining = $payment->remainingAmount();
                 $progress  = $payment->amount > 0 ? min(100, ($payment->paid_amount / $payment->amount) * 100) : 0;
