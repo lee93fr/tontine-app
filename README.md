@@ -21,26 +21,21 @@ Application Laravel 11 + PostgreSQL pour gérer des tontines avec un système d'
 - PHP 8.2+
 - PostgreSQL
 - Composer
-- Node.js (pour Vite/assets, optionnel si vous utilisez CDN Tailwind)
+- Node.js et npm (pour compiler les assets Vite)
 
-### 1. Cloner et installer
+### 1. Installer les dépendances
 
-```bash
-# Copier les fichiers dans votre projet Laravel existant ou créer un nouveau :
-composer create-project laravel/laravel tontine
-cd tontine
-
-# Copier tous les fichiers de ce projet par-dessus
-```
-
-### 2. Installer les dépendances Laravel Breeze (auth)
+Depuis la racine du dépôt cloné :
 
 ```bash
-composer require laravel/breeze --dev
-php artisan breeze:install blade
+composer install
+npm ci
 ```
 
-### 3. Configuration
+Le dépôt contient déjà l'application Laravel et ses écrans d'authentification ;
+il n'est pas nécessaire de créer un nouveau projet ou de réinstaller Breeze.
+
+### 2. Configuration
 
 ```bash
 cp .env.example .env
@@ -65,18 +60,22 @@ MAIL_FROM_ADDRESS=tontine@votredomaine.com
 MAIL_FROM_NAME="TontineApp"
 ```
 
-### 4. Base de données
+### 3. Base de données
 
 ```bash
 php artisan migrate
 php artisan db:seed  # Crée des données de démo
 ```
 
-### 5. Lancer
+### 4. Lancer
 
 ```bash
+npm run build
 php artisan serve
 ```
+
+Pour le développement des assets, `npm run dev` peut remplacer `npm run build`
+dans un second terminal.
 
 ---
 
