@@ -1,6 +1,8 @@
 
 # TontineApp — Application de gestion de tontines avec enchères
 
+Version de l’application par défaut déclarée à cette révision : **1.1.0** (source : [`.env.example`](.env.example)).
+
 Application Laravel 11 + PostgreSQL pour gérer des tontines avec un système d'enchères à date limite, rôles admin/participant, et notifications email via Brevo.
 
 ## Fonctionnalités
